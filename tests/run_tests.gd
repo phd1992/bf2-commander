@@ -27,8 +27,8 @@ func _init() -> void:
 	var t0 := Time.get_ticks_msec()
 	for f in files:
 		var script: GDScript = load("res://tests/" + f)
-		if script == null:
-			all_failures.append("%s: failed to load" % f)
+		if script == null or not script.can_instantiate():
+			all_failures.append("%s: failed to load or compile" % f)
 			continue
 		var inst = script.new()
 		for m in inst.get_method_list():
@@ -39,9 +39,13 @@ func _init() -> void:
 				continue
 			inst.current = "%s::%s" % [f, name]
 			var before_fail: int = inst.failures.size()
+			var before_pass: int = inst.passes
 			var tm := Time.get_ticks_msec()
 			inst.call(name)
 			total_tests += 1
+			if inst.failures.size() == before_fail and inst.passes == before_pass:
+				# A test that recorded nothing almost certainly died on a script error.
+				inst.failures.append("%s: no checks recorded (script error?)" % inst.current)
 			var status := "ok" if inst.failures.size() == before_fail else "FAIL"
 			print("  [%s] %s (%d ms)" % [status, inst.current, Time.get_ticks_msec() - tm])
 		total_pass += inst.passes

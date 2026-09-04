@@ -221,6 +221,20 @@ static func _update_member(w: World, s: Squad, m: Member, dt: float) -> void:
 	if _handle_cover(w, s, m, dt):
 		return
 	var leader := s.leader
+	# Detached members rejoin first, whatever the order.
+	if leader.state != Balance.MemberState.IN_VEHICLE:
+		var d := m.pos.distance_to(leader.pos)
+		if m.detached:
+			if d <= Balance.REJOIN_DIST:
+				m.detached = false
+				m.path.clear()
+			else:
+				_go_to_cell(w, m, leader.cell(), _member_speed(w, m) * Balance.CATCHUP_MULT, dt, Balance.DETACHED_REPATH_S)
+				return
+		elif d > Balance.DETACH_DIST:
+			m.detached = true
+			m.path.clear()
+			return
 	# DEFEND: each member holds the best cover cell within the flag radius.
 	if s.order_type() == Balance.Order.DEFEND and s.arrived:
 		if m.defend_cell == NO_CELL or not w.grid.is_passable(m.defend_cell, FOOT):
@@ -228,28 +242,14 @@ static func _update_member(w: World, s: Squad, m: Member, dt: float) -> void:
 		if m.defend_cell != NO_CELL:
 			_go_to_cell(w, m, m.defend_cell, _member_speed(w, m), dt, Balance.MEMBER_REPATH_S)
 		return
-	if s.arrived and (s.aggression <= 1 or s.order_type() == Balance.Order.HOLD):
+	if s.order_type() == Balance.Order.HOLD or (s.arrived and s.aggression <= 1):
 		_seek_hold_cover(w, m, dt)
-		return
-	if s.order_type() == Balance.Order.HOLD:
 		return
 	# Leader mounted: walk toward the squad destination on foot.
 	if leader.state == Balance.MemberState.IN_VEHICLE:
 		var dest := s.destination()
 		if dest.x >= 0:
 			_go_to_cell(w, m, dest, _member_speed(w, m), dt, Balance.DETACHED_REPATH_S)
-		return
-	var d := m.pos.distance_to(leader.pos)
-	if m.detached:
-		if d <= Balance.REJOIN_DIST:
-			m.detached = false
-			m.path.clear()
-		else:
-			_go_to_cell(w, m, leader.cell(), _member_speed(w, m) * Balance.CATCHUP_MULT, dt, Balance.DETACHED_REPATH_S)
-			return
-	elif d > Balance.DETACH_DIST:
-		m.detached = true
-		m.path.clear()
 		return
 	# Bounding overwatch: the halted team stays put and fires.
 	if s.in_combat and not s.arrived and s.destination().x >= 0 and m.bound_team != s.bound["moving"]:

@@ -10,3 +10,9 @@ One line per ambiguity: what was ambiguous, what was chosen, why.
 - Roads are drawn as 4-connected lines (a diagonal Bresenham step also fills the orthogonal cell) so wheeled vehicles never need a diagonal squeeze between two obstacles.
 - Smoothing of elevation locks town and flag areas; cliffs are removed by moving the *unlocked* cell of a pair, so flats stay flat.
 - Forest keeps a 1-cell clearance from roads and water (spec only demanded 3 cells from flags and the town) so road corners stay open for wheeled traffic.
+- Simulation clock is `tick_count * TICK` rather than accumulated floats, so timers that must fire at exactly N seconds (order delays, respawns, bleed) are not off by one tick from float drift.
+- The squad leader marches at the pace of the squad's slowest member (min speed_var) so formations hold on the move; individual variance still applies to everyone else.
+- Under a HOLD order (and any other order) detached members still walk back and rejoin before taking cover; the spec only says HOLD stops the squad, not its stragglers.
+- A test method that records no checks is counted as a failure by the runner: a GDScript runtime error aborts the method silently and would otherwise pass.
+- Squad respawn with fewer than 6 tickets left revives as many members as the team can pay for instead of waiting forever.
+- Flag capture XP (+20) goes to every squad of the capturing team with at least one member inside the radius at the moment the capture completes.

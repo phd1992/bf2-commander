@@ -20,6 +20,9 @@ var squads: Array[Squad] = []
 var members: Array[Member] = []
 var vehicles: Array[Vehicle] = []
 var tickets := { Balance.Team.BLUE: Balance.START_TICKETS, Balance.Team.RED: Balance.START_TICKETS }
+var bleed_timer := 0.0
+var spawn_policy: SpawnPolicy
+var match_stats := { "walls_destroyed": 0, "assets_used": 0, "kills": { Balance.Team.BLUE: 0, Balance.Team.RED: 0 } }
 
 ## True when any cell's terrain changed since the renderer last looked.
 var terrain_dirty := true
@@ -49,6 +52,10 @@ func setup(p_seed: int, with_squads: bool = true) -> void:
 	_install_map(result)
 	if with_squads:
 		create_squads()
+
+
+func _init() -> void:
+	spawn_policy = SpawnConquest.new(self)
 
 
 ## Installs a generated (or hand-built) map. Used by setup() and by tests
@@ -109,6 +116,14 @@ func hq_of(team: int) -> Flag:
 		if f.is_hq and f.owner == team:
 			return f
 	return null
+
+
+func flag_count(team: int) -> int:
+	var n := 0
+	for f in flags:
+		if not f.is_hq and f.owner == team:
+			n += 1
+	return n
 
 
 ## Adds a flag to a hand-built map (tests).
@@ -367,6 +382,96 @@ func dismount_squad(s: Squad) -> void:
 
 
 # ---------------------------------------------------------------------------
+# Deaths and respawns
+# ---------------------------------------------------------------------------
+
+## Kills a member. `killer` is the squad credited with the kill (or null).
+func kill_member(m: Member, killer: Squad = null) -> void:
+	if m.state == Balance.MemberState.DEAD:
+		return
+	if m.state == Balance.MemberState.IN_VEHICLE and m.vehicle != null:
+		m.vehicle.occupants.erase(m)
+		if m.vehicle.occupants.is_empty():
+			m.vehicle.owner_squad = null
+		m.vehicle = null
+	m.state = Balance.MemberState.DEAD
+	m.death_time = time
+	m.deaths += 1
+	m.reset_movement()
+	var s := m.squad
+	s.deaths += 1
+	if killer != null and killer.team != m.team:
+		killer.kills += 1
+		killer.add_xp(Balance.XP_KILL)
+		match_stats["kills"][killer.team] += 1
+	events.append({ "type": "death", "pos": m.pos, "team": m.team })
+	s.refresh_leader()
+	if s.is_wiped():
+		s.reset_veterancy()
+		s.wiped_since = time
+		s.vehicle = null
+		spawn_policy.request_squad_respawn(s)
+	else:
+		spawn_policy.request_member_respawn(m)
+
+
+func revive_member(m: Member, pos: Vector2) -> void:
+	m.state = Balance.MemberState.ALIVE
+	m.hp = Balance.MEMBER_HP
+	m.pos = pos
+	m.vehicle = null
+	m.respawn_at = -1.0
+	m.shot_at_time = -100.0
+	m.last_shot_time = -100.0
+	m.reset_movement()
+	m.next_pause_at = time + rng.randf_range(Balance.PAUSE_INTERVAL[0], Balance.PAUSE_INTERVAL[1])
+	m.squad.refresh_leader()
+
+
+# ---------------------------------------------------------------------------
+# Flags
+# ---------------------------------------------------------------------------
+
+func _update_flags(dt: float) -> void:
+	for f: Flag in flags:
+		if f.is_hq:
+			continue
+		var blue := 0
+		var red := 0
+		var present: Array = []
+		var centre := f.centre_pos()
+		var r := f.radius()
+		for m in members:
+			if not m.is_alive():
+				continue
+			if m.pos.distance_to(centre) <= r:
+				if m.team == Balance.Team.BLUE:
+					blue += 1
+				else:
+					red += 1
+				if m.squad not in present:
+					present.append(m.squad)
+		var captured := f.update_capture(blue, red, dt)
+		if captured != Balance.Team.NONE:
+			events.append({ "type": "capture", "flag": f, "team": captured })
+			for s in present:
+				if s.team == captured:
+					s.add_xp(Balance.XP_CAPTURE)
+					s.captures += 1
+			_on_flag_owner_changed(f)
+
+
+## Hook for pad vehicles changing side (Section 7.2); filled in with vehicles.
+func _on_flag_owner_changed(f: Flag) -> void:
+	for p in pads:
+		if p["flag"] != f.id:
+			continue
+		var v: Vehicle = p["vehicle"]
+		if v != null and v.alive and v.is_idle():
+			v.team = f.owner
+
+
+# ---------------------------------------------------------------------------
 # Tick
 # ---------------------------------------------------------------------------
 
@@ -380,3 +485,7 @@ func step(dt: float) -> void:
 	var collapsed := buildings.check_collapses()
 	if not collapsed.is_empty():
 		events.append({ "type": "collapse", "cells": collapsed })
+	_update_flags(dt)
+	Tickets.update(self, dt)
+	spawn_policy.tick(dt)
+	Tickets.check_victory(self)
