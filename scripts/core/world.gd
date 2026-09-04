@@ -61,6 +61,14 @@ func _init() -> void:
 	spawn_policy = SpawnConquest.new(self)
 
 
+## Installs the commander AIs: RED always, BLUE too for AI vs AI.
+func configure_match(ai_vs_ai: bool) -> void:
+	ais.clear()
+	ais.append(CommanderAI.new(Balance.Team.RED, Balance.AI_TICK_S))
+	if ai_vs_ai:
+		ais.append(CommanderAI.new(Balance.Team.BLUE, Balance.AI_TICK_S * 0.5))
+
+
 ## Installs a generated (or hand-built) map. Used by setup() and by tests
 ## that construct custom grids.
 func _install_map(result: Dictionary) -> void:
@@ -267,9 +275,10 @@ func occupied_cells() -> Dictionary:
 
 ## Issues an order. It is acknowledged now and executed after the squad's
 ## Discipline delay (Section 6.2). `delay_override` < 0 uses the stat delay.
-func give_order(s: Squad, type: int, cell: Vector2i = Vector2i(-1, -1), flag: Flag = null, vehicle: Vehicle = null, delay_override: float = -1.0) -> void:
+## `then` is an optional follow-on order applied once a MOUNT completes.
+func give_order(s: Squad, type: int, cell: Vector2i = Vector2i(-1, -1), flag: Flag = null, vehicle: Vehicle = null, delay_override: float = -1.0, then: Dictionary = {}) -> void:
 	var delay := s.order_delay() if delay_override < 0.0 else delay_override
-	s.pending = { "type": type, "cell": cell, "flag": flag, "vehicle": vehicle, "at": time + delay }
+	s.pending = { "type": type, "cell": cell, "flag": flag, "vehicle": vehicle, "at": time + delay, "then": then }
 	if delay <= 0.0:
 		_apply_order(s, s.pending)
 		s.pending = {}
@@ -292,7 +301,7 @@ func _apply_order(s: Squad, o: Dictionary) -> void:
 		s.order_completed = true
 		s.arrived = false
 		return
-	s.order = { "type": type, "cell": o.get("cell", Vector2i(-1, -1)), "flag": o.get("flag"), "vehicle": o.get("vehicle") }
+	s.order = { "type": type, "cell": o.get("cell", Vector2i(-1, -1)), "flag": o.get("flag"), "vehicle": o.get("vehicle"), "then": o.get("then", {}) }
 	s.order_completed = false
 	s.arrived = false
 	s.path.clear()

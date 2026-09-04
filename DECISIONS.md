@@ -25,3 +25,8 @@ One line per ambiguity: what was ambiguous, what was chosen, why.
 - Empty enemy vehicles are valid targets (an AT soldier will destroy an abandoned enemy jeep rather than wait to capture it with the flag); the side-change rule only matters if the vehicle survives.
 - A pad vehicle whose flag is neutralised keeps its old team until the other team completes the capture.
 - The camera starts over the player's HQ, offset so the squad panel does not cover it.
+- AI idle detection: a squad with a DEFEND order counts as idle for the attack rule once no enemy contacts remain within 6 cells of its flag (DEFEND never completes on its own, so without this the AI would park squads forever). A squad with a pending (not yet executed) order is never idle.
+- AI with every flag owned: idle squads DEFEND the own flag nearest the enemy HQ with the fewest defenders (the spec's attack rule has nothing to send them to).
+- AI mount rule: the follow-on ATTACK/DEFEND order is stored with the MOUNT order and applied the moment the squad is aboard (or the seats are full); auto-dismount happens at the start of the AI tick when the vehicle is within 4 cells of the destination.
+- AI UAV targeting uses the flag of the most recently issued ATTACK order while that flag is still not owned; otherwise the own flag with the most contacts nearby.
+- AI artillery clusters are evaluated with each contact as a candidate centre; a vehicle contact counts as a full cluster.

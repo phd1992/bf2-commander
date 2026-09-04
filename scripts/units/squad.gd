@@ -138,8 +138,9 @@ func has_order() -> bool:
 	return order_type() != Balance.Order.NONE
 
 
+## Idle = nothing pending and either no order or a completed one.
 func is_idle() -> bool:
-	return not has_order() or order_completed
+	return pending.is_empty() and (not has_order() or order_completed)
 
 
 func is_mounted() -> bool:
