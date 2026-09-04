@@ -35,3 +35,4 @@ One line per ambiguity: what was ambiguous, what was chosen, why.
 - Broken Arrow ticket rule: since Conquest charges tickets at respawn time and Broken Arrow never respawns, deaths cost nothing automatically; bleed is unchanged.
 - The Broken Arrow AI buys wiped squads back at the entry nearest the closest non-own flag, and keeps one tank then up to two APCs while it can still afford a squad on top.
 - Hidden stats reveal events: the spec names two examples (order executed → Discipline, firefight → Skill); Comms is revealed after the squad has produced three contact reports and Aggression after it reaches an objective while in contact. Hidden stats only mask the display; the simulation always uses the real values. Off in AI-vs-AI mode.
+- Hybrid mode entries are the three edge points followed by the owned capturable flags in flag order; the HQ is not an entry (the edge points already sit beside it). Losing a flag removes it from the list immediately.

@@ -52,6 +52,7 @@ func _ready() -> void:
 	_mode = OptionButton.new()
 	_mode.add_item("Conquest (respawn at flags)")
 	_mode.add_item("Broken Arrow (buy reinforcements)")
+	_mode.add_item("Hybrid (Broken Arrow + owned flags as entries)")
 	_mode.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mode_row.add_child(_mode)
 	box.add_child(mode_row)
@@ -87,7 +88,10 @@ func _ready() -> void:
 
 
 func _mode_name() -> String:
-	return "BROKEN_ARROW" if _mode.selected == 1 else "CONQUEST"
+	match _mode.selected:
+		1: return "BROKEN_ARROW"
+		2: return "HYBRID"
+	return "CONQUEST"
 
 
 func _seed() -> int:

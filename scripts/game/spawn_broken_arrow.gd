@@ -12,12 +12,25 @@ var entry_choice := {}
 var purchases := { Balance.Team.BLUE: 0, Balance.Team.RED: 0 }
 
 
-## Entry points are the spawn points in this mode.
-func get_spawn_points(team: int) -> Array[Vector2i]:
+## Cells a team may buy reinforcements at. Hybrid mode overrides this.
+func entries(team: int) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	for c in world.entry_points[team]:
 		out.append(c)
 	return out
+
+
+## Display names matching entries(), same order.
+func entry_names(team: int) -> Array:
+	var out: Array = []
+	for i in entries(team).size():
+		out.append(Balance.BA_ENTRY_NAMES[i] if i < Balance.BA_ENTRY_NAMES.size() else "Entry %d" % (i + 1))
+	return out
+
+
+## Entry points are the spawn points in this mode.
+func get_spawn_points(team: int) -> Array[Vector2i]:
+	return entries(team)
 
 
 ## No flags to choose from: the purchase panel replaces the selector.
@@ -34,7 +47,7 @@ func request_squad_respawn(_squad: Squad) -> void:
 
 
 func set_preferred_spawn(s: Squad, cell: Vector2i) -> void:
-	var pts: Array = world.entry_points[s.team]
+	var pts := entries(s.team)
 	for i in pts.size():
 		if pts[i] == cell:
 			entry_choice[s] = i
@@ -66,7 +79,7 @@ func buy_squad(s: Squad, entry_index: int = -1) -> bool:
 		return false
 	if entry_index < 0:
 		entry_index = entry_index_for(s)
-	var pts: Array = world.entry_points[s.team]
+	var pts := entries(s.team)
 	if pts.is_empty():
 		return false
 	entry_index = clampi(entry_index, 0, pts.size() - 1)
@@ -86,7 +99,7 @@ func buy_vehicle(team: int, vtype: String, entry_index: int = 1) -> Vehicle:
 	var cost: float = Balance.BA_COST_VEHICLE[vtype]
 	if not can_afford(team, cost):
 		return null
-	var pts: Array = world.entry_points[team]
+	var pts := entries(team)
 	if pts.is_empty():
 		return null
 	entry_index = clampi(entry_index, 0, pts.size() - 1)

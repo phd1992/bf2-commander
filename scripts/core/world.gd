@@ -71,6 +71,8 @@ func set_spawn_mode(mode: String) -> void:
 	spawn_mode = mode
 	if mode == "BROKEN_ARROW":
 		spawn_policy = SpawnBrokenArrow.new(self)
+	elif mode == "HYBRID":
+		spawn_policy = SpawnHybrid.new(self)
 	else:
 		spawn_policy = SpawnConquest.new(self)
 

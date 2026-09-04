@@ -20,8 +20,9 @@ godot                          # play (menu -> Play / Watch AI vs AI)
 ./run_sim.sh --matches 10      # headless AI vs AI batch
 ```
 
-Modes: Conquest (respawn at owned flags, the v1 mode) and Broken Arrow (buy
-reinforcements that enter at the map edge). Both are chosen on the main menu,
+Modes: Conquest (respawn at owned flags, the v1 mode), Broken Arrow (buy
+reinforcements that enter at the map edge) and Hybrid (Broken Arrow plus owned
+flags as forward entries). Both are chosen on the main menu,
 which also has a toggle for RED squads rolling stats like BLUE.
 
 Requires a Godot 4.4+ standard editor binary on `PATH` as `godot` (or set

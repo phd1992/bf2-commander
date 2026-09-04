@@ -220,8 +220,8 @@ func _rule_purchases(w: World) -> void:
 	for s in w.squads_of(team):
 		if s.is_wiped() and ba.can_afford(team, Balance.BA_COST_SQUAD):
 			# enter at the point nearest the closest non-own flag
-			var pts: Array = w.entry_points[team]
-			var best_i := 1
+			var pts: Array = ba.entries(team)
+			var best_i := mini(1, pts.size() - 1)
 			var best_d := 1.0e9
 			var targets := _non_own_flags(w)
 			for i in pts.size():

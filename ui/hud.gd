@@ -13,6 +13,7 @@ var _shop: PanelContainer       # Broken Arrow purchase panel
 var _shop_points: Label
 var _shop_entry: OptionButton
 var _shop_buttons := {}         # vtype -> Button
+var _shop_entry_names: Array = []
 var _game: Node2D
 var _units_layer: Node2D
 
@@ -270,6 +271,14 @@ func _refresh_shop(w: World) -> void:
 	var ba: SpawnBrokenArrow = w.spawn_policy
 	_shop.visible = true
 	_shop_points.text = "Reinforcements: %d pts  (+%.0f/min)" % [int(ba.points[Sim.player_team]), ba.income_per_min(Sim.player_team)]
+	var names: Array = ba.entry_names(Sim.player_team)
+	if names != _shop_entry_names:
+		var keep := _shop_entry.selected
+		_shop_entry.clear()
+		for n in names:
+			_shop_entry.add_item(n)
+		_shop_entry.select(clampi(keep, 0, maxi(names.size() - 1, 0)))
+		_shop_entry_names = names
 	for vtype in _shop_buttons.keys():
 		_shop_buttons[vtype].disabled = not ba.can_afford(Sim.player_team, Balance.BA_COST_VEHICLE[vtype])
 

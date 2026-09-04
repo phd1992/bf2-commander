@@ -14,7 +14,11 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	var autoplay := "--autoplay" in args
 	var ai := "--ai" in args
-	var mode := "BROKEN_ARROW" if "--broken-arrow" in args else "CONQUEST"
+	var mode := "CONQUEST"
+	if "--broken-arrow" in args:
+		mode = "BROKEN_ARROW"
+	elif "--hybrid" in args:
+		mode = "HYBRID"
 	var red_rolled := "--red-rolled" in args
 	var hidden := "--hidden-stats" in args
 	var seed := randi() % 100000
