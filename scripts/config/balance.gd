@@ -29,7 +29,7 @@ const MAP_H := 64
 const TICK := 0.1
 
 const MATCH_LENGTH_S := 1200.0
-const START_TICKETS := 200
+const START_TICKETS := 300
 const BLEED_INTERVAL_S := 3.0
 const RESPAWN_TICKET_COST := 1
 

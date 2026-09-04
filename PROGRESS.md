@@ -31,7 +31,7 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 - [x] M7 — Fog and intel (test 13; spotting with concealment and muzzle flash, Comms-delayed contacts that fade, three-state fog overlay).
 - [x] M8 — Assets (test 14; UAV, artillery, supply drop, vehicle drop with cooldowns and arrival delays; asset bar with `Q/W/E/R`, ghost circle before confirming).
 - [x] M9 — Commander AI (rule-based, per-rule switches; RED captures, defends, mounts vehicles and uses all four assets; the player can lose).
-- [ ] M10 — Headless sim, balance, polish.
+- [x] M10 — Headless sim, balance, polish (test 16, `Watch AI vs AI`, wrapper scripts, README, determinism replay test).
 
 ## Balance changes from the spec's starting values
 
@@ -43,13 +43,37 @@ Made while getting the Section 8.4 sanity expectations to hold (test 10). All in
 | AT `range` / `interval` / `dmg_veh` | 10 / 6 s / 120 | 12 / 4 s / 270 | Three rockets kill a tank; the AT gets meaningful shots from cover before the tank's cannon works through the squad. |
 | CANNON `cover_ignore` / `interval` | 0.5 / 4 s | 0.3 / 5 s | Interior cover now actually protects infantry from tank fire. |
 | HMG `interval` | 0.33 s | 0.4 s | Slightly less HMG attrition on covered infantry. |
+| `START_TICKETS` | 200 | 300 | AI-vs-AI matches averaged 7.1 min (target 8–18); respawn costs, not bleed, drain tickets. |
 
 Results with these values (10 seeded runs each): 6v3 riflemen 10/10, interior defenders 10/10, tank in the open 10/10, tank vs interior squad loses 7/10.
 
 ## Known issues
 
+- Deep interior cells cannot see out of a building (the spec's LOS rule blocks any sight line whose midpoint crosses a wall), so only soldiers on cells adjacent to the outer wall fight from inside; DEFEND picks cover by score and may park some members in the back.
+- The test suite takes ~80 s because test 16 plays three full AI-vs-AI matches plus a determinism replay; use `--filter=` for quick runs.
+
 - Godot prints "ObjectDB instances leaked at exit" after the tests: squads and members reference each other (RefCounted cycles) and are not torn down explicitly. Harmless for a game process; noted here so nobody chases it.
+
+## AI vs AI results (M10, seeds 1–10, `./run_sim.sh --matches 10 --seed 1`)
+
+| seed | winner | tickets B/R | length | kills B/R | assets | walls |
+|---|---|---|---|---|---|---|
+| 1 | RED | 0 / 239 | 8.0 min | 57 / 144 | 26 | 17 |
+| 2 | BLUE | 119 / 0 | 10.3 min | 159 / 128 | 40 | 20 |
+| 3 | RED | 0 / 122 | 10.2 min | 116 / 157 | 41 | 28 |
+| 4 | BLUE | 66 / 0 | 10.8 min | 173 / 160 | 44 | 8 |
+| 5 | RED | 0 / 74 | 10.4 min | 119 / 211 | 39 | 34 |
+| 6 | RED | 0 / 44 | 11.6 min | 180 / 169 | 46 | 15 |
+| 7 | RED | 0 / 105 | 10.5 min | 150 / 157 | 39 | 23 |
+| 8 | BLUE | 159 / 0 | 9.2 min | 187 / 113 | 37 | 26 |
+| 9 | BLUE | 147 / 0 | 10.2 min | 159 / 126 | 40 | 25 |
+| 10 | BLUE | 116 / 0 | 9.7 min | 194 / 120 | 37 | 25 |
+
+BLUE win rate 50% (5/10, no draws), average duration 10.1 min, no errors. All ten matches ended on tickets; the 20-minute clock was never reached. Each match takes 11–20 s of wall time headless.
+
+Before the last balance change (START_TICKETS 200) the win rate was also 50% but matches averaged 7.1 min, below the 8–18 min target: with ~100 deaths per side per match the respawn cost dominates the ticket drain. Raising the starting tickets to 300 (see the table above) lengthens matches proportionally without touching the win rate.
 
 ## Next
 
-- M10.
+- Phase 2 backlog (Section 19), in order: Broken Arrow spawn mode, RED stat variance toggle, hidden stats, hybrid mode, suppression / medics / air.
+- Possible polish: DEFEND cover choice could prefer interior cells adjacent to a wall ("windows"), since deep interior cells cannot see out under the LOS rule; a minimap; hover highlight of formation slots.

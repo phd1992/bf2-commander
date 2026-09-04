@@ -30,7 +30,7 @@ func test_member_respawns_at_nearest_owned_point() -> void:
 	check_eq(m.state, Balance.MemberState.ALIVE, "alive after 15 s")
 	check(m.pos.distance_to(a.centre_pos()) <= 2.0, "respawned at A (nearest owned to the leader), at %s" % str(m.pos))
 	check(m.detached, "respawned member walks back as detached")
-	check_eq(w.tickets[Balance.Team.BLUE], 199, "cost one ticket")
+	check_eq(w.tickets[Balance.Team.BLUE], Balance.START_TICKETS - 1, "cost one ticket")
 	check_near(m.hp, Balance.MEMBER_HP, 0.001, "full HP")
 	run_seconds(w, 12.0)
 	check(not m.detached, "rejoined the squad")
@@ -60,7 +60,7 @@ func test_squad_respawn_after_wipe() -> void:
 	check(s.leader != null and s.leader.is_alive(), "leader restored")
 	for m in s.members:
 		check(m.pos.distance_to(b.centre_pos()) <= 2.5, "respawned at B, the owned point nearest the last order")
-	check_eq(w.tickets[Balance.Team.BLUE], 194, "squad respawn cost six tickets")
+	check_eq(w.tickets[Balance.Team.BLUE], Balance.START_TICKETS - 6, "squad respawn cost six tickets")
 
 
 func test_preferred_spawn_point() -> void:
@@ -86,7 +86,7 @@ func test_no_spawn_when_nothing_owned() -> void:
 	w.kill_member(s.members[3])
 	run_seconds(w, 30.0)
 	check_eq(s.members[3].state, Balance.MemberState.DEAD, "no owned point: waits")
-	check_eq(w.tickets[Balance.Team.BLUE], 200, "no ticket spent while waiting")
+	check_eq(w.tickets[Balance.Team.BLUE], Balance.START_TICKETS, "no ticket spent while waiting")
 	w.flag_by_name("A").owner = Balance.Team.BLUE
 	run_seconds(w, 0.2)
 	check_eq(s.members[3].state, Balance.MemberState.ALIVE, "respawns as soon as a point is owned")

@@ -94,15 +94,15 @@ func test_bleed_timing() -> void:
 	f.owner = Balance.Team.BLUE
 	f.progress = 1.0
 	run_seconds(w, 2.9)
-	check_eq(w.tickets[Balance.Team.RED], 200, "no bleed before 3 s")
+	check_eq(w.tickets[Balance.Team.RED], Balance.START_TICKETS, "no bleed before 3 s")
 	run_seconds(w, 0.2)
-	check_eq(w.tickets[Balance.Team.RED], 199, "RED bleeds 1 ticket at 3 s")
-	check_eq(w.tickets[Balance.Team.BLUE], 200, "BLUE does not bleed")
+	check_eq(w.tickets[Balance.Team.RED], Balance.START_TICKETS - 1, "RED bleeds 1 ticket at 3 s")
+	check_eq(w.tickets[Balance.Team.BLUE], Balance.START_TICKETS, "BLUE does not bleed")
 	run_seconds(w, 27.0)
-	check_eq(w.tickets[Balance.Team.RED], 190, "10 tickets after 30 s")
+	check_eq(w.tickets[Balance.Team.RED], Balance.START_TICKETS - 10, "10 tickets after 30 s")
 	f.owner = Balance.Team.NONE
 	run_seconds(w, 9.0)
-	check_eq(w.tickets[Balance.Team.RED], 190, "equal flag counts: no bleed")
+	check_eq(w.tickets[Balance.Team.RED], Balance.START_TICKETS - 10, "equal flag counts: no bleed")
 
 
 func test_respawn_costs() -> void:
@@ -111,11 +111,11 @@ func test_respawn_costs() -> void:
 	var s := _place(w, Balance.Team.BLUE, 6, Vector2(10, 20))
 	w.kill_member(s.members[2])
 	run_seconds(w, 15.1)
-	check_eq(w.tickets[Balance.Team.BLUE], 199, "member respawn costs 1 ticket")
+	check_eq(w.tickets[Balance.Team.BLUE], Balance.START_TICKETS - 1, "member respawn costs 1 ticket")
 	for m in s.members:
 		w.kill_member(m)
 	run_seconds(w, 20.1)
-	check_eq(w.tickets[Balance.Team.BLUE], 193, "squad respawn costs 6 tickets")
+	check_eq(w.tickets[Balance.Team.BLUE], Balance.START_TICKETS - 7, "squad respawn costs 6 tickets")
 	check_eq(s.alive_count(), 6, "all six are back")
 
 
