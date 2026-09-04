@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://render/terrain_layer.gd" id="2_terrain"]
+[ext_resource type="Script" path="res://render/units_layer.gd" id="3_units"]
 [ext_resource type="Script" path="res://render/camera.gd" id="3_camera"]
 [ext_resource type="PackedScene" path="res://ui/hud.tscn" id="4_hud"]
 
@@ -10,6 +11,9 @@ script = ExtResource("1_game")
 
 [node name="TerrainLayer" type="Node2D" parent="."]
 script = ExtResource("2_terrain")
+
+[node name="UnitsLayer" type="Node2D" parent="."]
+script = ExtResource("3_units")
 
 [node name="DebugLayer" type="Node2D" parent="."]
 

@@ -23,7 +23,7 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 
 - [x] M0 — Skeleton: project, autoload `Sim`, `balance.gd`, menu → game scene, camera, empty test runner.
 - [x] M1 — Grid, terrain, elevation, pathfinding, LOS, generator (tests 1–4, 15; `F1` draws HQ-to-HQ paths per class).
-- [ ] M2 — Squads and movement.
+- [x] M2 — Squads and movement (tests 7–9; squad cards, selection, MOVE orders, formations, variance, detached members).
 - [ ] M3 — Flags, tickets, victory, Conquest spawning.
 - [ ] M4 — Combat.
 - [ ] M5 — Vehicles.
@@ -35,8 +35,8 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 
 ## Known issues
 
-- None yet.
+- Godot prints "ObjectDB instances leaked at exit" after the tests: squads and members reference each other (RefCounted cycles) and are not torn down explicitly. Harmless for a game process; noted here so nobody chases it.
 
 ## Next
 
-- M2.
+- M3.
