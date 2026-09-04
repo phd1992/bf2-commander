@@ -17,8 +17,9 @@ func _ready() -> void:
 
 	var box := VBoxContainer.new()
 	box.set_anchors_preset(Control.PRESET_CENTER)
-	box.custom_minimum_size = Vector2(320, 0)
-	box.position = Vector2(-160, -140)
+	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	box.grow_vertical = Control.GROW_DIRECTION_BOTH
+	box.custom_minimum_size = Vector2(520, 0)
 	box.add_theme_constant_override("separation", 12)
 	add_child(box)
 
@@ -75,10 +76,11 @@ func _ready() -> void:
 	watch.pressed.connect(func(): play_requested.emit(_seed(), true, _mode_name(), _red_rolled.button_pressed, _hidden.button_pressed))
 	box.add_child(watch)
 
-	var quit := Button.new()
-	quit.text = "Quit"
-	quit.pressed.connect(func(): get_tree().quit())
-	box.add_child(quit)
+	if not OS.has_feature("web"):   # a browser tab cannot be quit from inside
+		var quit := Button.new()
+		quit.text = "Quit"
+		quit.pressed.connect(func(): get_tree().quit())
+		box.add_child(quit)
 
 	var help := Label.new()
 	help.text = "WASD pan  |  wheel zoom  |  1-4 squads  |  RMB order  |  Q/W/E/R assets  |  SPACE pause  |  -/= speed"

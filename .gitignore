@@ -6,3 +6,5 @@ Godot_v*
 # Editor / OS noise
 *.tmp
 .DS_Store
+# Web export output
+build/

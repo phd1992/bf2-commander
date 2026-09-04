@@ -222,7 +222,8 @@ func _refresh_cards(w: World) -> void:
 		c["title"].text = "%d  %s   %s" % [i + 1, s.name, s.hidden_stats_text() if w.hidden_stats else s.stats_text()]
 		var dots := ""
 		for m in s.members:
-			dots += "●" if m.is_alive() else "○"
+			# ASCII on purpose: the web build's fallback font has no dot glyphs
+			dots += "O" if m.is_alive() else "x"
 			dots += " "
 		c["dots"].text = dots + ("  [%s]" % s.vehicle.vtype if s.vehicle != null and s.is_mounted() else "")
 		c["hp"].value = s.avg_hp()

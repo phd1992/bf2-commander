@@ -28,6 +28,29 @@ which also has a toggle for RED squads rolling stats like BLUE.
 Requires a Godot 4.4+ standard editor binary on `PATH` as `godot` (or set
 `GODOT=/path/to/godot`).
 
+## Play in a browser
+
+The project exports to the web (HTML + WebAssembly, no threads required, so
+it works on any static host without special headers). Two ways:
+
+- **GitHub Pages**: `.github/workflows/web.yml` runs the tests, exports the
+  web build and deploys it on every push. Enable it once under
+  *Settings → Pages → Source: GitHub Actions*; the URL is then
+  `https://<owner>.github.io/<repo>/`.
+- **Locally**: install the web export templates (Editor → Manage Export
+  Templates, or unzip `web_nothreads_release.zip` from the official
+  templates archive into `~/.local/share/godot/export_templates/4.4.1.stable/`),
+  then
+
+  ```
+  mkdir -p build/web
+  godot --headless --export-release Web build/web/index.html
+  npx http-server build/web -p 8080      # or: python3 -m http.server -d build/web 8080
+  ```
+
+  and open <http://localhost:8080>. The build must be served over HTTP;
+  opening `index.html` directly from disk does not work in browsers.
+
 ## Controls
 
 WASD / arrows / middle-drag pan, wheel zooms. `1`–`4` select squads (`Shift`
