@@ -61,6 +61,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		match event.keycode:
 			KEY_F1:
 				_toggle_debug_paths()
+			KEY_F2:
+				# debug: free artillery strike at the mouse cell (ignores cooldown)
+				var w: World = Sim.world
+				w.assets.ready_at[Sim.player_team]["ARTILLERY"] = 0.0
+				w.assets.use(Sim.player_team, "ARTILLERY", mouse_cell())
 			KEY_SPACE:
 				Sim.toggle_pause()
 			KEY_MINUS:
