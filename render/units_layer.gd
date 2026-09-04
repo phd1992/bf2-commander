@@ -8,6 +8,9 @@ const ORDER_COLOR := Color(1, 0.9, 0.3, 0.8)
 
 var selected_ids: Array = []   # squad ids highlighted (set by the HUD)
 var player_team: int = Balance.Team.BLUE
+## Asset being aimed ("" = none) and the cell under the mouse, set by the HUD.
+var ghost_asset := ""
+var ghost_cell := Vector2i(-1, -1)
 
 
 func _process(_delta: float) -> void:
@@ -25,6 +28,18 @@ func _draw() -> void:
 	_draw_members(w)
 	_draw_contacts(w)
 	_draw_orders(w)
+	_draw_ghost(w)
+
+
+func _draw_ghost(w: World) -> void:
+	if ghost_asset == "" or not w.grid.in_bounds(ghost_cell):
+		return
+	var c := Grid.centre_of(ghost_cell) * PX
+	var r: float = maxf(Balance.ASSETS[ghost_asset]["radius"], 1.0) * PX
+	var col := Color(1, 0.9, 0.3, 0.9)
+	_draw_dashed_circle(c, r, col)
+	draw_line(c + Vector2(-8, 0), c + Vector2(8, 0), col, 1.5)
+	draw_line(c + Vector2(0, -8), c + Vector2(0, 8), col, 1.5)
 
 
 static func team_color(team: int) -> Color:
@@ -105,8 +120,8 @@ func _draw_vehicles(w: World) -> void:
 
 
 func _visible_set(w: World) -> Dictionary:
-	if "vision" in w and w.vision != null:
-		return w.vision.get(player_team, {})
+	if w.fog != null:
+		return w.fog.vision.get(player_team, {})
 	return {}
 
 

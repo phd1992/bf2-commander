@@ -6,13 +6,16 @@ const PAN_SPEED := 900.0
 const ZOOM_MIN := 0.5
 const ZOOM_MAX := 2.0
 const ZOOM_STEP := 1.15
+## The squad panel covers the left edge of the screen; let the camera scroll
+## a little past the map edge so the player's HQ is never hidden under it.
+const LEFT_MARGIN_PX := 260.0
 
 var _dragging := false
 
 
 func _ready() -> void:
 	var map_px := Vector2(Balance.MAP_W, Balance.MAP_H) * Balance.CELL_PX
-	limit_left = 0
+	limit_left = -int(LEFT_MARGIN_PX / ZOOM_MIN)
 	limit_top = 0
 	limit_right = int(map_px.x)
 	limit_bottom = int(map_px.y)
@@ -22,7 +25,8 @@ func _ready() -> void:
 		var hq := Sim.world.hq_of(Sim.player_team)
 		if hq != null:
 			# start over the player's HQ, shifted so the squad panel does not cover it
-			position = hq.centre_pos() * Balance.CELL_PX + Vector2(520, 0)
+			var vp := get_viewport_rect().size
+			position = hq.centre_pos() * Balance.CELL_PX + Vector2((vp.x * 0.5 - LEFT_MARGIN_PX - 120.0) / zoom.x, 0)
 	make_current()
 	_clamp()
 
@@ -67,5 +71,6 @@ func _zoom_at(factor: float, _screen_pos: Vector2) -> void:
 func _clamp() -> void:
 	var half := get_viewport_rect().size * 0.5 / zoom.x
 	var map_px := Vector2(Balance.MAP_W, Balance.MAP_H) * Balance.CELL_PX
-	position.x = clampf(position.x, minf(half.x, map_px.x * 0.5), maxf(map_px.x - half.x, map_px.x * 0.5))
+	var min_x := half.x - LEFT_MARGIN_PX / zoom.x
+	position.x = clampf(position.x, minf(min_x, map_px.x * 0.5), maxf(map_px.x - half.x, map_px.x * 0.5))
 	position.y = clampf(position.y, minf(half.y, map_px.y * 0.5), maxf(map_px.y - half.y, map_px.y * 0.5))

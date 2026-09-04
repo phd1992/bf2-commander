@@ -147,6 +147,8 @@ func _process(_delta: float) -> void:
 	_mode_label.text = "" if pending_mode == "" else "%s: click the map (ESC cancels)" % pending_mode
 	if _units_layer != null:
 		_units_layer.selected_ids = selected
+		_units_layer.ghost_asset = pending_mode.trim_prefix("ASSET:") if pending_mode.begins_with("ASSET:") else ""
+		_units_layer.ghost_cell = _game.mouse_cell()
 
 
 func _refresh_flags(w: World) -> void:
@@ -270,8 +272,8 @@ func _unit_at(w: World, pos: Vector2):
 
 
 func _is_visible(w: World, u) -> bool:
-	if "vision" in w and w.vision != null:
-		return w.vision.get(Sim.player_team, {}).has(u)
+	if w.fog != null:
+		return w.fog.is_visible_to(Sim.player_team, u)
 	return true
 
 

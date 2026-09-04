@@ -29,7 +29,7 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 - [x] M5 — Vehicles (pads, mount/dismount with overflow on foot, driving, vehicle weapons, side change on capture; `M` mounts nearest, `X` dismounts, left-click an own vehicle to mount).
 - [x] M6 — Destruction (test 11; walls to rubble, collapse with occupant damage, pathfinder and LOS follow; `F2` = free debug artillery at the mouse).
 - [x] M7 — Fog and intel (test 13; spotting with concealment and muzzle flash, Comms-delayed contacts that fade, three-state fog overlay).
-- [ ] M8 — Assets.
+- [x] M8 — Assets (test 14; UAV, artillery, supply drop, vehicle drop with cooldowns and arrival delays; asset bar with `Q/W/E/R`, ghost circle before confirming).
 - [ ] M9 — Commander AI.
 - [ ] M10 — Headless sim, balance, polish.
 
@@ -52,4 +52,4 @@ Results with these values (10 seeded runs each): 6v3 riflemen 10/10, interior de
 
 ## Next
 
-- M8.
+- M9.
