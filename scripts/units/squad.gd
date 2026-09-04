@@ -45,6 +45,12 @@ var kills := 0
 var deaths := 0
 var vehicle_kills := 0
 var captures := 0
+
+# Observed events for hidden-stat reveals (Section 19.3)
+var orders_executed := 0
+var shots_fired := 0
+var contacts_reported := 0
+var objectives_in_combat := 0
 var spawn_pref: Flag = null
 var wipe_respawn_at := -1.0
 var wiped_since := -1.0
@@ -168,6 +174,31 @@ func objective_pos() -> Vector2:
 
 func stats_text() -> String:
 	return "S%d D%d A%d C%d" % [skill, discipline, aggression, comms]
+
+
+func skill_revealed() -> bool:
+	return shots_fired >= Balance.HIDDEN_SHOTS_FOR_SKILL
+
+
+func discipline_revealed() -> bool:
+	return orders_executed >= Balance.HIDDEN_ORDERS_FOR_DISCIPLINE
+
+
+func aggression_revealed() -> bool:
+	return objectives_in_combat >= Balance.HIDDEN_OBJECTIVES_FOR_AGGRESSION
+
+
+func comms_revealed() -> bool:
+	return contacts_reported >= Balance.HIDDEN_CONTACTS_FOR_COMMS
+
+
+## Stats with "?" for values the commander has not observed yet.
+func hidden_stats_text() -> String:
+	return "S%s D%s A%s C%s" % [
+		str(skill) if skill_revealed() else "?",
+		str(discipline) if discipline_revealed() else "?",
+		str(aggression) if aggression_revealed() else "?",
+		str(comms) if comms_revealed() else "?"]
 
 
 func order_text() -> String:

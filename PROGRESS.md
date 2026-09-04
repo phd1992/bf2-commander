@@ -40,7 +40,7 @@ Phase 2 (Section 19):
 
 - [x] 19.1 Broken Arrow spawn mode: reinforcement points (10/min + 2/min per flag, start 100), squads 50 / jeep 20 / APC 60 / tank 120, three map-edge entry points per team from the generator, no respawns, purchase panel on the squad panel, AI buys squads back and armour, mode chosen on the main menu (`--broken-arrow` for autoplay, `--mode broken-arrow` headless).
 - [x] 19.2 RED stat variance: menu checkbox (`--red-rolled` on the command line / headless).
-- [ ] 19.3 Hidden stats.
+- [x] 19.3 Hidden stats: menu checkbox / `--hidden-stats`; Skill shows after 20 squad shots, Discipline after 2 executed orders, Comms after 3 contact reports, Aggression after reaching an objective in combat (thresholds in balance.gd).
 - [ ] 19.4 Hybrid mode.
 - [ ] 19.5 Suppression, medics, helicopters, air.
 
@@ -88,5 +88,5 @@ Broken Arrow AI vs AI (seeds 1–4): all complete, RED 3 / BLUE 1, 15.9–20.0 m
 
 ## Next
 
-- Phase 2 backlog, in order: 19.3 hidden stats, 19.4 hybrid mode (Broken Arrow entry plus owned flags as forward entry points), 19.5 suppression / medics / air.
+- Phase 2 backlog, in order: 19.4 hybrid mode (Broken Arrow entry plus owned flags as forward entry points), 19.5 suppression / medics / air.
 - Possible polish: DEFEND cover choice could prefer interior cells adjacent to a wall ("windows"), since deep interior cells cannot see out under the LOS rule; a minimap; hover highlight of formation slots.

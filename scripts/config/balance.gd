@@ -190,6 +190,12 @@ const BA_COST_SQUAD := 50.0
 const BA_COST_VEHICLE := { "JEEP": 20.0, "APC": 60.0, "TANK": 120.0 }
 const BA_ENTRY_NAMES := ["North", "Centre", "South"]
 
+# Hidden stats (Section 19.3): player squad stats are revealed after N events
+const HIDDEN_ORDERS_FOR_DISCIPLINE := 2      # orders executed
+const HIDDEN_SHOTS_FOR_SKILL := 20           # shots fired by the squad
+const HIDDEN_CONTACTS_FOR_COMMS := 3         # contact reports created
+const HIDDEN_OBJECTIVES_FOR_AGGRESSION := 1  # objectives reached while in combat
+
 # ---------------------------------------------------------------------------
 # Fog of war (Section 11)
 # ---------------------------------------------------------------------------

@@ -34,3 +34,4 @@ One line per ambiguity: what was ambiguous, what was chosen, why.
 - Broken Arrow entry points sit one cell in from the map edge at rows 8, 32 and 55 (nearest passable cell), RED mirrored; vehicles bought there appear on the nearest cell passable for their class.
 - Broken Arrow ticket rule: since Conquest charges tickets at respawn time and Broken Arrow never respawns, deaths cost nothing automatically; bleed is unchanged.
 - The Broken Arrow AI buys wiped squads back at the entry nearest the closest non-own flag, and keeps one tank then up to two APCs while it can still afford a squad on top.
+- Hidden stats reveal events: the spec names two examples (order executed → Discipline, firefight → Skill); Comms is revealed after the squad has produced three contact reports and Aggression after it reaches an objective while in contact. Hidden stats only mask the display; the simulation always uses the real values. Off in AI-vs-AI mode.

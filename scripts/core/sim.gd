@@ -14,18 +14,21 @@ var ai_vs_ai := false
 var player_team: int = Balance.Team.BLUE
 var spawn_mode := "CONQUEST"
 var red_rolled := false
+var hidden_stats := false
 
 var _accum := 0.0
 var _last_stats := {}
 
 
-func start_match(p_seed: int, p_ai_vs_ai: bool = false, p_mode: String = "CONQUEST", p_red_rolled: bool = false) -> void:
+func start_match(p_seed: int, p_ai_vs_ai: bool = false, p_mode: String = "CONQUEST", p_red_rolled: bool = false, p_hidden_stats: bool = false) -> void:
 	seed = p_seed
 	ai_vs_ai = p_ai_vs_ai
 	spawn_mode = p_mode
 	red_rolled = p_red_rolled
+	hidden_stats = p_hidden_stats
 	world = World.new()
 	world.setup(seed, true, red_rolled)
+	world.hidden_stats = hidden_stats and not ai_vs_ai
 	world.set_spawn_mode(spawn_mode)
 	world.configure_match(ai_vs_ai)
 	paused = false

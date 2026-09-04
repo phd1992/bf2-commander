@@ -66,7 +66,8 @@ func update_spotting() -> void:
 				seen[tg] = true
 				if squad != null:
 					squad.visible_enemies[tg] = true
-					_touch_contact(team, tg, squad.comms_delay(), squad.comms_persist())
+					if _touch_contact(team, tg, squad.comms_delay(), squad.comms_persist()):
+						squad.contacts_reported += 1
 	# UAV: live contacts for everything inside the circle.
 	if world.assets != null:
 		for team in [Balance.Team.BLUE, Balance.Team.RED]:
@@ -85,19 +86,23 @@ func update_spotting() -> void:
 	_purge_contacts()
 
 
-func _touch_contact(team: int, unit, delay: float, persist: float, uav: bool = false) -> void:
+## Creates or refreshes a contact. Returns true when a new report was created.
+func _touch_contact(team: int, unit, delay: float, persist: float, uav: bool = false) -> bool:
 	var time := world.time
 	var table: Dictionary = contacts[team]
 	var c: Dictionary = table.get(unit, {})
+	var created := false
 	if c.is_empty() or time > c["persist_until"]:
 		c = { "unit": unit, "first_seen": time, "reveal_at": time + delay, "last_seen": time, "persist_until": time + persist, "pos": unit.pos, "uav": uav }
 		table[unit] = c
+		created = true
 	else:
 		c["reveal_at"] = minf(c["reveal_at"], time + delay)
 		c["last_seen"] = time
 		c["persist_until"] = maxf(c["persist_until"], time + persist)
 		c["uav"] = c["uav"] or uav
 	c["pos"] = unit.pos
+	return created
 
 
 func _purge_contacts() -> void:

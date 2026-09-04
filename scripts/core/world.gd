@@ -21,6 +21,8 @@ var entry_points := { Balance.Team.BLUE: [], Balance.Team.RED: [] }
 var spawn_mode := "CONQUEST"
 ## RED squads roll stats like BLUE (Phase 2.2) instead of uniform 3s.
 var red_rolled := false
+## Player squad stats start hidden and are revealed by observed events (2.3).
+var hidden_stats := false
 
 var squads: Array[Squad] = []
 var members: Array[Member] = []
@@ -319,6 +321,7 @@ func _apply_order(s: Squad, o: Dictionary) -> void:
 		s.arrived = false
 		return
 	s.order = { "type": type, "cell": o.get("cell", Vector2i(-1, -1)), "flag": o.get("flag"), "vehicle": o.get("vehicle"), "then": o.get("then", {}) }
+	s.orders_executed += 1
 	s.order_completed = false
 	s.arrived = false
 	s.path.clear()

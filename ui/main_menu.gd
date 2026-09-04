@@ -1,11 +1,12 @@
 extends Control
 ## Main menu: Play (seed field), Watch AI vs AI, Quit.
 
-signal play_requested(seed: int, ai_vs_ai: bool, mode: String, red_rolled: bool)
+signal play_requested(seed: int, ai_vs_ai: bool, mode: String, red_rolled: bool, hidden_stats: bool)
 
 var _seed_edit: LineEdit
 var _mode: OptionButton
 var _red_rolled: CheckBox
+var _hidden: CheckBox
 
 
 func _ready() -> void:
@@ -59,14 +60,18 @@ func _ready() -> void:
 	_red_rolled.text = "RED squads roll stats too (default: uniform 3s)"
 	box.add_child(_red_rolled)
 
+	_hidden = CheckBox.new()
+	_hidden.text = "Hidden squad stats (revealed by watching them)"
+	box.add_child(_hidden)
+
 	var play := Button.new()
 	play.text = "Play"
-	play.pressed.connect(func(): play_requested.emit(_seed(), false, _mode_name(), _red_rolled.button_pressed))
+	play.pressed.connect(func(): play_requested.emit(_seed(), false, _mode_name(), _red_rolled.button_pressed, _hidden.button_pressed))
 	box.add_child(play)
 
 	var watch := Button.new()
 	watch.text = "Watch AI vs AI"
-	watch.pressed.connect(func(): play_requested.emit(_seed(), true, _mode_name(), _red_rolled.button_pressed))
+	watch.pressed.connect(func(): play_requested.emit(_seed(), true, _mode_name(), _red_rolled.button_pressed, _hidden.button_pressed))
 	box.add_child(watch)
 
 	var quit := Button.new()

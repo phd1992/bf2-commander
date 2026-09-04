@@ -109,6 +109,7 @@ static func resolve_shot(w: World, shooter, squad: Squad, wname: String, target)
 	var p := hit_chance(w, shooter, squad, wname, target)
 	var hit := w.rng.randf() < p
 	target.shot_at_time = w.time
+	squad.shots_fired += 1
 	w.events.append({ "type": "shot", "from": shooter.pos, "to": target.pos, "hit": hit, "weapon": wname, "team": shooter.team })
 	if spec["splash"] > 0.0:
 		var impact: Vector2 = target.pos

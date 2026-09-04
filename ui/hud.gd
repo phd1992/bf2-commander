@@ -218,7 +218,7 @@ func _refresh_cards(w: World) -> void:
 			continue
 		var s: Squad = blue[i]
 		c["panel"].visible = true
-		c["title"].text = "%d  %s   %s" % [i + 1, s.name, s.stats_text()]
+		c["title"].text = "%d  %s   %s" % [i + 1, s.name, s.hidden_stats_text() if w.hidden_stats else s.stats_text()]
 		var dots := ""
 		for m in s.members:
 			dots += "●" if m.is_alive() else "○"

@@ -136,6 +136,8 @@ static func _update_leader(w: World, s: Squad, m: Member, dt: float) -> void:
 	if not s.arrived and m.pos.distance_to(dpos) <= Balance.ORDER_ARRIVE_DIST:
 		s.arrived = true
 		s.path.clear()
+		if s.in_combat:
+			s.objectives_in_combat += 1
 	if s.arrived:
 		_objective_behaviour(w, s, m, dt)
 		return
