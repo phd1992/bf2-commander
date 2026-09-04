@@ -1,0 +1,8 @@
+# Godot 4 import/cache directory (regenerate with: godot --headless --import)
+.godot/
+# Local Godot binary downloads
+*.zip
+Godot_v*
+# Editor / OS noise
+*.tmp
+.DS_Store

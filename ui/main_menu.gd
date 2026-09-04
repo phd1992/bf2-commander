@@ -1,0 +1,71 @@
+extends Control
+## Main menu: Play (seed field), Watch AI vs AI, Quit.
+
+signal play_requested(seed: int, ai_vs_ai: bool)
+
+var _seed_edit: LineEdit
+
+
+func _ready() -> void:
+	var bg := ColorRect.new()
+	bg.color = Color(0.08, 0.09, 0.11)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
+
+	var box := VBoxContainer.new()
+	box.set_anchors_preset(Control.PRESET_CENTER)
+	box.custom_minimum_size = Vector2(320, 0)
+	box.position = Vector2(-160, -140)
+	box.add_theme_constant_override("separation", 12)
+	add_child(box)
+
+	var title := Label.new()
+	title.text = "COMMANDER"
+	title.add_theme_font_size_override("font_size", 48)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+
+	var sub := Label.new()
+	sub.text = "Command BLUE. Capture flags. Bleed RED."
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.modulate = Color(0.7, 0.7, 0.7)
+	box.add_child(sub)
+
+	var seed_row := HBoxContainer.new()
+	var seed_label := Label.new()
+	seed_label.text = "Seed"
+	seed_row.add_child(seed_label)
+	_seed_edit = LineEdit.new()
+	_seed_edit.text = str(randi() % 100000)
+	_seed_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_seed_edit.placeholder_text = "random"
+	seed_row.add_child(_seed_edit)
+	box.add_child(seed_row)
+
+	var play := Button.new()
+	play.text = "Play"
+	play.pressed.connect(func(): play_requested.emit(_seed(), false))
+	box.add_child(play)
+
+	var watch := Button.new()
+	watch.text = "Watch AI vs AI"
+	watch.pressed.connect(func(): play_requested.emit(_seed(), true))
+	box.add_child(watch)
+
+	var quit := Button.new()
+	quit.text = "Quit"
+	quit.pressed.connect(func(): get_tree().quit())
+	box.add_child(quit)
+
+	var help := Label.new()
+	help.text = "WASD pan  |  wheel zoom  |  1-4 squads  |  RMB order  |  Q/W/E/R assets  |  SPACE pause  |  -/= speed"
+	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	help.modulate = Color(0.55, 0.55, 0.55)
+	box.add_child(help)
+
+
+func _seed() -> int:
+	var t := _seed_edit.text.strip_edges()
+	if t.is_valid_int():
+		return int(t)
+	return randi() % 100000
