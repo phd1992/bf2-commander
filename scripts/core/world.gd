@@ -22,6 +22,9 @@ var vehicles: Array[Vehicle] = []
 var tickets := { Balance.Team.BLUE: Balance.START_TICKETS, Balance.Team.RED: Balance.START_TICKETS }
 var bleed_timer := 0.0
 var spawn_policy: SpawnPolicy
+var fog: Fog
+var assets: Assets
+var ais: Array = []                        # CommanderAI instances (M9)
 var match_stats := { "walls_destroyed": 0, "assets_used": 0, "kills": { Balance.Team.BLUE: 0, Balance.Team.RED: 0 } }
 
 ## True when any cell's terrain changed since the renderer last looked.
@@ -69,6 +72,8 @@ func _install_map(result: Dictionary) -> void:
 	grid.cell_listeners.append(_on_cell_changed)
 	buildings = Buildings.new(grid)
 	buildings.scan()
+	fog = Fog.new(self)
+	assets = Assets.new(self)
 	flags.clear()
 	for fd in result.get("flags", []):
 		var f := Flag.new()
@@ -415,6 +420,49 @@ func kill_member(m: Member, killer: Squad = null) -> void:
 		spawn_policy.request_member_respawn(m)
 
 
+func destroy_vehicle(v: Vehicle, killer: Squad = null) -> void:
+	if not v.alive:
+		return
+	v.alive = false
+	v.hp = 0.0
+	events.append({ "type": "vehicle_destroyed", "pos": v.pos, "team": v.team, "vtype": v.vtype })
+	for m in v.occupants.duplicate():
+		kill_member(m, killer)
+	v.occupants.clear()
+	if v.owner_squad != null and v.owner_squad.vehicle == v:
+		v.owner_squad.vehicle = null
+	v.owner_squad = null
+	if killer != null and killer.team != v.team:
+		killer.vehicle_kills += 1
+		killer.add_xp(Balance.XP_VEHICLE)
+	if v.pad_index >= 0 and v.pad_index < pads.size():
+		pads[v.pad_index]["vehicle"] = null
+		pads[v.pad_index]["respawn_at"] = time + Balance.PAD_RESPAWN_S
+	vehicles.erase(v)
+
+
+## Applies weapon damage to a WALL cell (Section 9).
+func damage_wall(c: Vector2i, dmg: float) -> void:
+	if buildings.damage_wall(c, dmg):
+		match_stats["walls_destroyed"] += 1
+		events.append({ "type": "wall_down", "cell": c })
+
+
+func _apply_collapses() -> void:
+	var collapsed := buildings.check_collapses()
+	if collapsed.is_empty():
+		return
+	events.append({ "type": "collapse", "cells": collapsed })
+	var hit := {}
+	for c in collapsed:
+		hit[c] = true
+	for m in members:
+		if m.state == Balance.MemberState.ALIVE and hit.has(m.cell()):
+			m.hp -= Balance.COLLAPSE_DAMAGE
+			if m.hp <= 0.0:
+				kill_member(m, null)
+
+
 func revive_member(m: Member, pos: Vector2) -> void:
 	m.state = Balance.MemberState.ALIVE
 	m.hp = Balance.MEMBER_HP
@@ -482,10 +530,14 @@ func step(dt: float) -> void:
 	time = tick_count * dt
 	_execute_pending_orders()
 	Movement.update(self, dt)
-	var collapsed := buildings.check_collapses()
-	if not collapsed.is_empty():
-		events.append({ "type": "collapse", "cells": collapsed })
+	fog.update_spotting()
+	Combat.update(self, dt)
+	_apply_collapses()
 	_update_flags(dt)
 	Tickets.update(self, dt)
 	spawn_policy.tick(dt)
+	assets.update(dt)
+	_apply_collapses()
+	for ai in ais:
+		ai.update(self)
 	Tickets.check_victory(self)

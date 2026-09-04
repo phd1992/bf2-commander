@@ -148,10 +148,10 @@ const DISMOUNT_RADIUS := 1.5
 
 const WEAPONS := {
 	"RIFLE":      { "range": 12.0, "interval": 1.0,  "dmg_inf": 25.0, "dmg_veh": 2.0,   "splash": 0.0, "cover_ignore": 0.0, "wall_dmg": 0.0 },
-	"AT":         { "range": 10.0, "interval": 6.0,  "dmg_inf": 40.0, "dmg_veh": 120.0, "splash": 1.0, "cover_ignore": 0.3, "wall_dmg": 30.0 },
-	"HMG":        { "range": 10.0, "interval": 0.33, "dmg_inf": 8.0,  "dmg_veh": 3.0,   "splash": 0.0, "cover_ignore": 0.0, "wall_dmg": 0.0 },
+	"AT":         { "range": 12.0, "interval": 4.0,  "dmg_inf": 40.0, "dmg_veh": 270.0, "splash": 1.0, "cover_ignore": 0.3, "wall_dmg": 30.0 },
+	"HMG":        { "range": 10.0, "interval": 0.4,  "dmg_inf": 8.0,  "dmg_veh": 3.0,   "splash": 0.0, "cover_ignore": 0.0, "wall_dmg": 0.0 },
 	"AUTOCANNON": { "range": 14.0, "interval": 0.5,  "dmg_inf": 15.0, "dmg_veh": 20.0,  "splash": 0.0, "cover_ignore": 0.2, "wall_dmg": 5.0 },
-	"CANNON":     { "range": 18.0, "interval": 4.0,  "dmg_inf": 60.0, "dmg_veh": 150.0, "splash": 1.5, "cover_ignore": 0.5, "wall_dmg": 40.0 },
+	"CANNON":     { "range": 18.0, "interval": 5.0,  "dmg_inf": 60.0, "dmg_veh": 150.0, "splash": 1.5, "cover_ignore": 0.3, "wall_dmg": 40.0 },
 	"ARTY_SHELL": { "range": 0.0,  "interval": 0.0,  "dmg_inf": 80.0, "dmg_veh": 60.0,  "splash": 1.5, "cover_ignore": 0.5, "wall_dmg": 50.0 },
 }
 
@@ -164,7 +164,7 @@ const MOVE_VEH := 0.8
 const VEHICLE_COVER_MULT := 0.5
 # A missed splash shot lands at a random point within this many cells of the
 # target. The missed target itself is excluded from that splash (see DECISIONS).
-const MISS_SCATTER := 1.0
+const MISS_SCATTER := 3.0
 
 # ---------------------------------------------------------------------------
 # Buildings (Section 9)

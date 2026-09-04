@@ -25,7 +25,7 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 - [x] M1 — Grid, terrain, elevation, pathfinding, LOS, generator (tests 1–4, 15; `F1` draws HQ-to-HQ paths per class).
 - [x] M2 — Squads and movement (tests 7–9; squad cards, selection, MOVE orders, formations, variance, detached members).
 - [x] M3 — Flags, tickets, victory, Conquest spawning (tests 5, 6, 12; end screen).
-- [ ] M4 — Combat.
+- [x] M4 — Combat (test 10; spotting, targeting, hit rolls, splash, veterancy, cover seeking, bounding, effects layer).
 - [ ] M5 — Vehicles.
 - [ ] M6 — Destruction.
 - [ ] M7 — Fog and intel.
@@ -33,10 +33,23 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 - [ ] M9 — Commander AI.
 - [ ] M10 — Headless sim, balance, polish.
 
+## Balance changes from the spec's starting values
+
+Made while getting the Section 8.4 sanity expectations to hold (test 10). All in `scripts/config/balance.gd`.
+
+| Constant | Spec | Now | Why |
+|---|---|---|---|
+| `MISS_SCATTER` | 1.0 | 3.0 | With a 1-cell scatter every missed cannon/AT shell still landed inside its own splash radius, so cover never mattered against splash weapons. |
+| AT `range` / `interval` / `dmg_veh` | 10 / 6 s / 120 | 12 / 4 s / 270 | Three rockets kill a tank; the AT gets meaningful shots from cover before the tank's cannon works through the squad. |
+| CANNON `cover_ignore` / `interval` | 0.5 / 4 s | 0.3 / 5 s | Interior cover now actually protects infantry from tank fire. |
+| HMG `interval` | 0.33 s | 0.4 s | Slightly less HMG attrition on covered infantry. |
+
+Results with these values (10 seeded runs each): 6v3 riflemen 10/10, interior defenders 10/10, tank in the open 10/10, tank vs interior squad loses 7/10.
+
 ## Known issues
 
 - Godot prints "ObjectDB instances leaked at exit" after the tests: squads and members reference each other (RefCounted cycles) and are not torn down explicitly. Harmless for a game process; noted here so nobody chases it.
 
 ## Next
 
-- M4.
+- M5.

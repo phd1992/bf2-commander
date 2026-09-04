@@ -12,6 +12,33 @@ var _debug_paths: Array = []   # Array of { "class": int, "cells": Array[Vector2
 func _ready() -> void:
 	Sim.match_ended.connect(_on_match_ended)
 	debug_layer.draw.connect(_draw_debug)
+	# --screenshot=PATH [--shot-after=SECONDS] [--quit-after-s=SECONDS]
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--screenshot="):
+			_screenshot_path = a.trim_prefix("--screenshot=")
+		elif a.begins_with("--shot-after="):
+			_screenshot_at = float(a.trim_prefix("--shot-after="))
+		elif a.begins_with("--quit-after-s="):
+			_quit_at = float(a.trim_prefix("--quit-after-s="))
+		elif a.begins_with("--speed="):
+			Sim.set_speed(int(a.trim_prefix("--speed=")))
+
+
+var _screenshot_path := ""
+var _screenshot_at := 2.0
+var _quit_at := -1.0
+var _wall_time := 0.0
+
+
+func _process(delta: float) -> void:
+	_wall_time += delta
+	if _screenshot_path != "" and _wall_time >= _screenshot_at:
+		var img := get_viewport().get_texture().get_image()
+		img.save_png(_screenshot_path)
+		print("screenshot saved: ", _screenshot_path)
+		_screenshot_path = ""
+	if _quit_at > 0.0 and _wall_time >= _quit_at:
+		get_tree().quit()
 
 
 func _on_match_ended() -> void:

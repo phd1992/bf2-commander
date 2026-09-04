@@ -9,7 +9,19 @@ var _current: Node
 
 
 func _ready() -> void:
-	show_menu()
+	# Developer conveniences from the command line (after "--"):
+	#   --autoplay [--ai] [--seed=N]   start a match immediately
+	var args := OS.get_cmdline_user_args()
+	var autoplay := "--autoplay" in args
+	var ai := "--ai" in args
+	var seed := randi() % 100000
+	for a in args:
+		if a.begins_with("--seed="):
+			seed = int(a.trim_prefix("--seed="))
+	if autoplay:
+		start_game(seed, ai)
+	else:
+		show_menu()
 
 
 func _clear() -> void:

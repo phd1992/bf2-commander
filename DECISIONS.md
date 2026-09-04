@@ -16,3 +16,9 @@ One line per ambiguity: what was ambiguous, what was chosen, why.
 - A test method that records no checks is counted as a failure by the runner: a GDScript runtime error aborts the method silently and would otherwise pass.
 - Squad respawn with fewer than 6 tickets left revives as many members as the team can pay for instead of waiting forever.
 - Flag capture XP (+20) goes to every squad of the capturing team with at least one member inside the radius at the moment the capture completes.
+- Splash on a miss: the missed primary target is excluded from its own miss splash (otherwise a miss with 1-cell scatter was identical to a hit); other units near the impact still take full damage.
+- AT kit: the launcher only engages vehicles; when no vehicle is in range the AT soldier uses the rifle on infantry (Section 6.1's wording over Section 8.2's "else nearest infantry"), so rockets are not wasted on riflemen.
+- "Visible to the shooter's team" for targeting means units spotted by any unit of that team this tick (raw vision), not the Comms-delayed commander contacts; the commander map delay is an intel-reporting effect, not a targeting one.
+- Section 8.4's "squad in INTERIOR" scenario places the soldiers on interior cells adjacent to the wall facing the tank: with the spec's LOS rule a wall at the midpoint of the sight line blocks it, so only "window" cells can shoot out at 8 cells.
+- Artillery kills are credited to nobody (no XP); vehicle-destruction XP (+30) is awarded on top of +10 per occupant killed.
+- Vehicles are treated as loud (spotted at 16 cells) even by infantry spotters whose normal spot range is 14.
