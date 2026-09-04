@@ -13,8 +13,11 @@ godot                                # or: godot --path .
 godot --headless --script res://tests/run_tests.gd
 godot --headless --script res://tests/run_tests.gd -- --filter=los   # subset
 
-# headless AI vs AI (from M10)
+# headless AI vs AI (from M10); add --mode broken-arrow and/or --red-rolled
 godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
+
+# start a match straight away for testing (after --):
+godot -- --autoplay [--ai] [--broken-arrow] [--red-rolled] [--seed=N] [--speed=4] [--screenshot=/path.png --shot-after=5 --quit-after-s=6]
 ```
 
 `godot` is any Godot 4.4+ stable Linux editor binary on PATH (the tests were run with 4.4.1).
@@ -32,6 +35,14 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 - [x] M8 — Assets (test 14; UAV, artillery, supply drop, vehicle drop with cooldowns and arrival delays; asset bar with `Q/W/E/R`, ghost circle before confirming).
 - [x] M9 — Commander AI (rule-based, per-rule switches; RED captures, defends, mounts vehicles and uses all four assets; the player can lose).
 - [x] M10 — Headless sim, balance, polish (test 16, `Watch AI vs AI`, wrapper scripts, README, determinism replay test).
+
+Phase 2 (Section 19):
+
+- [x] 19.1 Broken Arrow spawn mode: reinforcement points (10/min + 2/min per flag, start 100), squads 50 / jeep 20 / APC 60 / tank 120, three map-edge entry points per team from the generator, no respawns, purchase panel on the squad panel, AI buys squads back and armour, mode chosen on the main menu (`--broken-arrow` for autoplay, `--mode broken-arrow` headless).
+- [x] 19.2 RED stat variance: menu checkbox (`--red-rolled` on the command line / headless).
+- [ ] 19.3 Hidden stats.
+- [ ] 19.4 Hybrid mode.
+- [ ] 19.5 Suppression, medics, helicopters, air.
 
 ## Balance changes from the spec's starting values
 
@@ -73,7 +84,9 @@ BLUE win rate 50% (5/10, no draws), average duration 10.1 min, no errors. All te
 
 Before the last balance change (START_TICKETS 200) the win rate was also 50% but matches averaged 7.1 min, below the 8–18 min target: with ~100 deaths per side per match the respawn cost dominates the ticket drain. Raising the starting tickets to 300 (see the table above) lengthens matches proportionally without touching the win rate.
 
+Broken Arrow AI vs AI (seeds 1–4): all complete, RED 3 / BLUE 1, 15.9–20.0 min (one match reached the clock), ~35 kills per side. No balance target is set for this mode in the spec; it is bleed-driven and slower by design.
+
 ## Next
 
-- Phase 2 backlog (Section 19), in order: Broken Arrow spawn mode, RED stat variance toggle, hidden stats, hybrid mode, suppression / medics / air.
+- Phase 2 backlog, in order: 19.3 hidden stats, 19.4 hybrid mode (Broken Arrow entry plus owned flags as forward entry points), 19.5 suppression / medics / air.
 - Possible polish: DEFEND cover choice could prefer interior cells adjacent to a wall ("windows"), since deep interior cells cannot see out under the LOS rule; a minimap; hover highlight of formation slots.

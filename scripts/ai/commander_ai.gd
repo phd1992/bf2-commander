@@ -9,7 +9,7 @@ var team: int
 var next_tick := 0.0
 var enabled := {
 	"defend": true, "attack": true, "desperation": true, "artillery": true,
-	"uav": true, "supply": true, "vehicle_drop": true, "vehicles": true,
+	"uav": true, "supply": true, "vehicle_drop": true, "vehicles": true, "purchases": true,
 }
 ## Flag targeted by the most recent ATTACK order (used to aim the UAV).
 var last_attack_flag: Flag = null
@@ -33,6 +33,8 @@ func update(w: World) -> void:
 func tick(w: World) -> void:
 	var contacts := w.fog.revealed_contacts(team, w.time)
 	_rule_auto_dismount(w)
+	if enabled["purchases"]:
+		_rule_purchases(w)
 	if enabled["defend"]:
 		_rule_defend(w, contacts)
 	if enabled["attack"]:
@@ -208,6 +210,43 @@ func _rule_auto_dismount(w: World) -> void:
 		if s.vehicle.pos.distance_to(Grid.centre_of(dest)) <= Balance.AI_DISMOUNT_DIST:
 			w.dismount_squad(s)
 			s.arrived = false
+
+
+## 9 (Broken Arrow). Buy wiped squads back first, then armour when rich.
+func _rule_purchases(w: World) -> void:
+	if not (w.spawn_policy is SpawnBrokenArrow):
+		return
+	var ba: SpawnBrokenArrow = w.spawn_policy
+	for s in w.squads_of(team):
+		if s.is_wiped() and ba.can_afford(team, Balance.BA_COST_SQUAD):
+			# enter at the point nearest the closest non-own flag
+			var pts: Array = w.entry_points[team]
+			var best_i := 1
+			var best_d := 1.0e9
+			var targets := _non_own_flags(w)
+			for i in pts.size():
+				for f in targets:
+					var d: float = Grid.centre_of(pts[i]).distance_to(f.centre_pos())
+					if d < best_d:
+						best_d = d
+						best_i = i
+			ba.buy_squad(s, best_i)
+	# armour: keep one tank, then APCs, while every squad is alive
+	for s in w.squads_of(team):
+		if s.is_wiped():
+			return
+	var tanks := 0
+	var apcs := 0
+	for v in w.vehicles:
+		if v.alive and v.team == team:
+			if v.vtype == "TANK":
+				tanks += 1
+			elif v.vtype == "APC":
+				apcs += 1
+	if tanks == 0 and ba.can_afford(team, Balance.BA_COST_VEHICLE["TANK"] + Balance.BA_COST_SQUAD):
+		ba.buy_vehicle(team, "TANK", 1)
+	elif apcs < 2 and ba.can_afford(team, Balance.BA_COST_VEHICLE["APC"] + Balance.BA_COST_SQUAD):
+		ba.buy_vehicle(team, "APC", 1)
 
 
 # ---------------------------------------------------------------------------

@@ -1,9 +1,11 @@
 extends Control
 ## Main menu: Play (seed field), Watch AI vs AI, Quit.
 
-signal play_requested(seed: int, ai_vs_ai: bool)
+signal play_requested(seed: int, ai_vs_ai: bool, mode: String, red_rolled: bool)
 
 var _seed_edit: LineEdit
+var _mode: OptionButton
+var _red_rolled: CheckBox
 
 
 func _ready() -> void:
@@ -42,14 +44,29 @@ func _ready() -> void:
 	seed_row.add_child(_seed_edit)
 	box.add_child(seed_row)
 
+	var mode_row := HBoxContainer.new()
+	var mode_label := Label.new()
+	mode_label.text = "Mode"
+	mode_row.add_child(mode_label)
+	_mode = OptionButton.new()
+	_mode.add_item("Conquest (respawn at flags)")
+	_mode.add_item("Broken Arrow (buy reinforcements)")
+	_mode.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mode_row.add_child(_mode)
+	box.add_child(mode_row)
+
+	_red_rolled = CheckBox.new()
+	_red_rolled.text = "RED squads roll stats too (default: uniform 3s)"
+	box.add_child(_red_rolled)
+
 	var play := Button.new()
 	play.text = "Play"
-	play.pressed.connect(func(): play_requested.emit(_seed(), false))
+	play.pressed.connect(func(): play_requested.emit(_seed(), false, _mode_name(), _red_rolled.button_pressed))
 	box.add_child(play)
 
 	var watch := Button.new()
 	watch.text = "Watch AI vs AI"
-	watch.pressed.connect(func(): play_requested.emit(_seed(), true))
+	watch.pressed.connect(func(): play_requested.emit(_seed(), true, _mode_name(), _red_rolled.button_pressed))
 	box.add_child(watch)
 
 	var quit := Button.new()
@@ -62,6 +79,10 @@ func _ready() -> void:
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help.modulate = Color(0.55, 0.55, 0.55)
 	box.add_child(help)
+
+
+func _mode_name() -> String:
+	return "BROKEN_ARROW" if _mode.selected == 1 else "CONQUEST"
 
 
 func _seed() -> int:

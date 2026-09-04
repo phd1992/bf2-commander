@@ -97,7 +97,22 @@ static func _generate_once(rng: RandomNumberGenerator) -> Dictionary:
 		"seed_used": rng.seed,
 		"town_rect": TOWN_RECT,
 		"buildings_made": buildings_made,
+		"entry_points": _entry_points(grid),
 	}
+
+
+## Broken Arrow entry points (Section 19.1): three per team on their map
+## edge (north, centre, south), on FOOT-passable cells. RED mirrors BLUE.
+static func _entry_points(grid: Grid) -> Dictionary:
+	var blue: Array = []
+	var red: Array = []
+	for y in [8, Balance.MAP_H / 2, Balance.MAP_H - 9]:
+		var c := grid.nearest_passable(Vector2i(1, y), Balance.MoveClass.FOOT, 8)
+		if c.x < 0:
+			c = Vector2i(1, y)
+		blue.append(c)
+		red.append(mirror_cell(c))
+	return { Balance.Team.BLUE: blue, Balance.Team.RED: red }
 
 
 # --- 1. heightmap -------------------------------------------------------------

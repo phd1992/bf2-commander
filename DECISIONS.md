@@ -30,3 +30,7 @@ One line per ambiguity: what was ambiguous, what was chosen, why.
 - AI mount rule: the follow-on ATTACK/DEFEND order is stored with the MOUNT order and applied the moment the squad is aboard (or the seats are full); auto-dismount happens at the start of the AI tick when the vehicle is within 4 cells of the destination.
 - AI UAV targeting uses the flag of the most recently issued ATTACK order while that flag is still not owned; otherwise the own flag with the most contacts nearby.
 - AI artillery clusters are evaluated with each contact as a candidate centre; a vehicle contact counts as a full cluster.
+- Broken Arrow squads: a purchase brings a wiped squad slot back (same name, new rolled stats, no XP) rather than adding a fifth squad, so a team never has more than four squads and the squad panel, AI and end screen stay the same.
+- Broken Arrow entry points sit one cell in from the map edge at rows 8, 32 and 55 (nearest passable cell), RED mirrored; vehicles bought there appear on the nearest cell passable for their class.
+- Broken Arrow ticket rule: since Conquest charges tickets at respawn time and Broken Arrow never respawns, deaths cost nothing automatically; bleed is unchanged.
+- The Broken Arrow AI buys wiped squads back at the entry nearest the closest non-own flag, and keeps one tank then up to two APCs while it can still afford a squad on top.

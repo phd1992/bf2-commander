@@ -12,18 +12,22 @@ var paused := false
 var seed := 1
 var ai_vs_ai := false
 var player_team: int = Balance.Team.BLUE
+var spawn_mode := "CONQUEST"
+var red_rolled := false
 
 var _accum := 0.0
 var _last_stats := {}
 
 
-func start_match(p_seed: int, p_ai_vs_ai: bool = false) -> void:
+func start_match(p_seed: int, p_ai_vs_ai: bool = false, p_mode: String = "CONQUEST", p_red_rolled: bool = false) -> void:
 	seed = p_seed
 	ai_vs_ai = p_ai_vs_ai
+	spawn_mode = p_mode
+	red_rolled = p_red_rolled
 	world = World.new()
-	world.setup(seed)
-	if world.has_method("configure_match"):
-		world.call("configure_match", ai_vs_ai)
+	world.setup(seed, true, red_rolled)
+	world.set_spawn_mode(spawn_mode)
+	world.configure_match(ai_vs_ai)
 	paused = false
 	_accum = 0.0
 	match_started.emit()

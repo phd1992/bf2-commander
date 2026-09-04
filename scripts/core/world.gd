@@ -15,6 +15,12 @@ var flags: Array = []                      # Array[Flag]
 var pads: Array = []                       # Array[Dictionary]
 var town_rect := Rect2i()
 var generator_log: Array = []
+## team -> Array[Vector2i] of Broken Arrow entry points (Section 19.1).
+var entry_points := { Balance.Team.BLUE: [], Balance.Team.RED: [] }
+## "CONQUEST" or "BROKEN_ARROW".
+var spawn_mode := "CONQUEST"
+## RED squads roll stats like BLUE (Phase 2.2) instead of uniform 3s.
+var red_rolled := false
 
 var squads: Array[Squad] = []
 var members: Array[Member] = []
@@ -46,15 +52,25 @@ static var _stat_combos: Array = []
 # Setup
 # ---------------------------------------------------------------------------
 
-func setup(p_seed: int, with_squads: bool = true) -> void:
+func setup(p_seed: int, with_squads: bool = true, p_red_rolled: bool = false) -> void:
 	seed = p_seed
 	rng.seed = p_seed
 	time = 0.0
 	tick_count = 0
+	red_rolled = p_red_rolled
 	var result := MapGenerator.generate(p_seed, generator_log)
 	_install_map(result)
 	if with_squads:
 		create_squads()
+
+
+## Switches the spawning rules. Call before the first step.
+func set_spawn_mode(mode: String) -> void:
+	spawn_mode = mode
+	if mode == "BROKEN_ARROW":
+		spawn_policy = SpawnBrokenArrow.new(self)
+	else:
+		spawn_policy = SpawnConquest.new(self)
 
 
 func _init() -> void:
@@ -95,6 +111,7 @@ func _install_map(result: Dictionary) -> void:
 	pads.clear()
 	for pd in result.get("pads", []):
 		pads.append({ "flag": pd["flag"], "vtype": pd["vtype"], "cell": pd["cell"], "vehicle": null, "respawn_at": 0.0 })
+	entry_points = result.get("entry_points", { Balance.Team.BLUE: [], Balance.Team.RED: [] })
 	terrain_dirty = true
 
 
@@ -184,7 +201,7 @@ func create_squads() -> void:
 			if team == Balance.Team.RED:
 				n = Balance.RED_SQUAD_PREFIX + n
 			var stats: Array
-			if team == Balance.Team.BLUE:
+			if team == Balance.Team.BLUE or red_rolled:
 				stats = roll_stats()
 			else:
 				stats = [Balance.RED_FIXED_STAT, Balance.RED_FIXED_STAT, Balance.RED_FIXED_STAT, Balance.RED_FIXED_STAT]
@@ -495,6 +512,36 @@ func _apply_collapses() -> void:
 			m.hp -= Balance.COLLAPSE_DAMAGE
 			if m.hp <= 0.0:
 				kill_member(m, null)
+
+
+## Brings a wiped squad back as a fresh unit at `pos`: new stats (rolled for
+## BLUE, or for RED when red_rolled), no XP, everyone at full HP.
+func rebuy_squad(s: Squad, pos: Vector2) -> void:
+	var stats: Array
+	if s.team == Balance.Team.BLUE or red_rolled:
+		stats = roll_stats()
+	else:
+		stats = [Balance.RED_FIXED_STAT, Balance.RED_FIXED_STAT, Balance.RED_FIXED_STAT, Balance.RED_FIXED_STAT]
+	s.skill = stats[0]
+	s.discipline = stats[1]
+	s.aggression = stats[2]
+	s.comms = stats[3]
+	s.base_skill = s.skill
+	s.xp = 0
+	s.xp_level = 0
+	s.order = {}
+	s.pending = {}
+	s.order_completed = true
+	s.arrived = false
+	s.vehicle = null
+	s.wipe_respawn_at = -1.0
+	s.wiped_since = -1.0
+	for i in s.members.size():
+		var offset := Vector2.ZERO if i == 0 else Formation.slot("CLUSTER", i - 1)
+		revive_member(s.members[i], _nearest_open_pos(pos + offset))
+		s.members[i].speed_var = rng.randf_range(Balance.SPEED_VAR[0], Balance.SPEED_VAR[1])
+	s.leader = s.members[0]
+	events.append({ "type": "squad_respawn", "squad": s, "cell": Grid.cell_of(pos) })
 
 
 func revive_member(m: Member, pos: Vector2) -> void:

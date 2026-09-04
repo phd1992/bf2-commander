@@ -5,9 +5,10 @@ extends SceneTree
 ## to finish (an exception or a stuck simulation).
 
 
-static func run_match(seed: int, max_ticks: int = int(Balance.MATCH_LENGTH_S / Balance.TICK) + 10) -> Dictionary:
+static func run_match(seed: int, max_ticks: int = int(Balance.MATCH_LENGTH_S / Balance.TICK) + 10, mode: String = "CONQUEST", red_rolled: bool = false) -> Dictionary:
 	var w := World.new()
-	w.setup(seed)
+	w.setup(seed, true, red_rolled)
+	w.set_spawn_mode(mode)
 	w.configure_match(true)
 	var ticks := 0
 	var t0 := Time.get_ticks_msec()
@@ -58,6 +59,8 @@ static func format_line(r: Dictionary) -> String:
 func _init() -> void:
 	var matches := 10
 	var seed := 1
+	var mode := "CONQUEST"
+	var red_rolled := false
 	var args := OS.get_cmdline_user_args()
 	var i := 0
 	while i < args.size():
@@ -72,12 +75,19 @@ func _init() -> void:
 			i += 1
 		elif a.begins_with("--seed="):
 			seed = int(a.trim_prefix("--seed="))
+		elif a == "--mode" and i + 1 < args.size():
+			mode = args[i + 1].to_upper().replace("-", "_")
+			i += 1
+		elif a.begins_with("--mode="):
+			mode = a.trim_prefix("--mode=").to_upper().replace("-", "_")
+		elif a == "--red-rolled":
+			red_rolled = true
 		i += 1
-	print("Commander headless: %d AI vs AI match(es) from seed %d" % [matches, seed])
+	print("Commander headless: %d AI vs AI match(es) from seed %d, mode %s%s" % [matches, seed, mode, ", RED rolled" if red_rolled else ""])
 	var results: Array = []
 	var failed := false
 	for m in matches:
-		var r := run_match(seed + m)
+		var r := run_match(seed + m, int(Balance.MATCH_LENGTH_S / Balance.TICK) + 10, mode, red_rolled)
 		results.append(r)
 		print(format_line(r))
 		if not r["finished"]:

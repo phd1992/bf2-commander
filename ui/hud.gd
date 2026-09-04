@@ -9,6 +9,10 @@ var _tooltip: Label
 var _mode_label: Label
 var _cards: Array = []          # one Dictionary of controls per BLUE squad
 var _asset_buttons := {}        # asset name -> Button
+var _shop: PanelContainer       # Broken Arrow purchase panel
+var _shop_points: Label
+var _shop_entry: OptionButton
+var _shop_buttons := {}         # vtype -> Button
 var _game: Node2D
 var _units_layer: Node2D
 
@@ -95,9 +99,44 @@ func _build_squad_panel() -> void:
 		spawn.visible = false
 		spawn.item_selected.connect(_on_spawn_selected.bind(i))
 		v.add_child(spawn)
+		var buy := Button.new()
+		buy.visible = false
+		buy.text = "Buy squad (%d)" % int(Balance.BA_COST_SQUAD)
+		buy.pressed.connect(_on_buy_squad.bind(i))
+		v.add_child(buy)
 		card.gui_input.connect(_on_card_input.bind(i))
 		box.add_child(card)
-		_cards.append({ "panel": card, "title": title, "dots": dots, "hp": hp, "xp": xp, "order": order, "spawn": spawn, "spawn_flags": [] })
+		_cards.append({ "panel": card, "title": title, "dots": dots, "hp": hp, "xp": xp, "order": order, "spawn": spawn, "spawn_flags": [], "buy": buy })
+	_build_shop(box)
+
+
+## Broken Arrow purchase panel: points, entry point, vehicle buttons.
+func _build_shop(box: VBoxContainer) -> void:
+	_shop = PanelContainer.new()
+	_shop.visible = false
+	var v := VBoxContainer.new()
+	_shop.add_child(v)
+	_shop_points = Label.new()
+	_shop_points.add_theme_font_size_override("font_size", 14)
+	v.add_child(_shop_points)
+	var row := HBoxContainer.new()
+	var l := Label.new()
+	l.text = "Entry"
+	row.add_child(l)
+	_shop_entry = OptionButton.new()
+	for n in Balance.BA_ENTRY_NAMES:
+		_shop_entry.add_item(n)
+	_shop_entry.select(1)
+	_shop_entry.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(_shop_entry)
+	v.add_child(row)
+	for vtype in ["JEEP", "APC", "TANK"]:
+		var b := Button.new()
+		b.text = "%s (%d)" % [vtype.capitalize(), int(Balance.BA_COST_VEHICLE[vtype])]
+		b.pressed.connect(_on_buy_vehicle.bind(vtype))
+		v.add_child(b)
+		_shop_buttons[vtype] = b
+	box.add_child(_shop)
 
 
 func _build_asset_bar() -> void:
@@ -142,6 +181,7 @@ func _process(_delta: float) -> void:
 		w.tickets[Balance.Team.BLUE], w.tickets[Balance.Team.RED], t / 60, t % 60, speed, w.seed]
 	_refresh_flags(w)
 	_refresh_cards(w)
+	_refresh_shop(w)
 	_refresh_assets(w)
 	_update_tooltip(w)
 	_mode_label.text = "" if pending_mode == "" else "%s: click the map (ESC cancels)" % pending_mode
@@ -197,7 +237,15 @@ func _refresh_cards(w: World) -> void:
 
 func _refresh_spawn_selector(w: World, s: Squad, c: Dictionary) -> void:
 	var opt: OptionButton = c["spawn"]
-	if not s.is_wiped() or not ("spawn_policy" in w) or w.spawn_policy == null:
+	var buy: Button = c["buy"]
+	if w.spawn_policy is SpawnBrokenArrow:
+		var ba: SpawnBrokenArrow = w.spawn_policy
+		opt.visible = false
+		buy.visible = s.is_wiped() and not Sim.ai_vs_ai
+		buy.disabled = not ba.can_afford(s.team, Balance.BA_COST_SQUAD)
+		return
+	buy.visible = false
+	if not s.is_wiped() or w.spawn_policy == null:
 		opt.visible = false
 		return
 	var points: Array = w.spawn_policy.spawn_flags(s.team)
@@ -213,6 +261,32 @@ func _refresh_spawn_selector(w: World, s: Squad, c: Dictionary) -> void:
 			if points[i] == s.spawn_pref:
 				opt.select(i)
 	opt.visible = true
+
+
+func _refresh_shop(w: World) -> void:
+	if not (w.spawn_policy is SpawnBrokenArrow) or Sim.ai_vs_ai:
+		_shop.visible = false
+		return
+	var ba: SpawnBrokenArrow = w.spawn_policy
+	_shop.visible = true
+	_shop_points.text = "Reinforcements: %d pts  (+%.0f/min)" % [int(ba.points[Sim.player_team]), ba.income_per_min(Sim.player_team)]
+	for vtype in _shop_buttons.keys():
+		_shop_buttons[vtype].disabled = not ba.can_afford(Sim.player_team, Balance.BA_COST_VEHICLE[vtype])
+
+
+func _on_buy_squad(card_index: int) -> void:
+	var w: World = Sim.world
+	if not (w.spawn_policy is SpawnBrokenArrow):
+		return
+	var blue := w.squads_of(Sim.player_team)
+	if card_index < blue.size():
+		w.spawn_policy.buy_squad(blue[card_index], _shop_entry.selected)
+
+
+func _on_buy_vehicle(vtype: String) -> void:
+	var w: World = Sim.world
+	if w.spawn_policy is SpawnBrokenArrow:
+		w.spawn_policy.buy_vehicle(Sim.player_team, vtype, _shop_entry.selected)
 
 
 func _refresh_assets(w: World) -> void:

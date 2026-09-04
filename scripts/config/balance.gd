@@ -182,6 +182,14 @@ const MEMBER_RESPAWN_S := 15.0
 const SQUAD_RESPAWN_S := 20.0
 const SPAWN_SCATTER := 1.0
 
+# Broken Arrow spawn mode (Section 19.1)
+const BA_START_POINTS := 100.0
+const BA_INCOME_PER_MIN := 10.0
+const BA_INCOME_PER_FLAG_PER_MIN := 2.0
+const BA_COST_SQUAD := 50.0
+const BA_COST_VEHICLE := { "JEEP": 20.0, "APC": 60.0, "TANK": 120.0 }
+const BA_ENTRY_NAMES := ["North", "Centre", "South"]
+
 # ---------------------------------------------------------------------------
 # Fog of war (Section 11)
 # ---------------------------------------------------------------------------

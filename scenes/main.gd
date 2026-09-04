@@ -14,12 +14,14 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	var autoplay := "--autoplay" in args
 	var ai := "--ai" in args
+	var mode := "BROKEN_ARROW" if "--broken-arrow" in args else "CONQUEST"
+	var red_rolled := "--red-rolled" in args
 	var seed := randi() % 100000
 	for a in args:
 		if a.begins_with("--seed="):
 			seed = int(a.trim_prefix("--seed="))
 	if autoplay:
-		start_game(seed, ai)
+		start_game(seed, ai, mode, red_rolled)
 	else:
 		show_menu()
 
@@ -39,9 +41,9 @@ func show_menu() -> void:
 	_current = menu
 
 
-func start_game(seed: int, ai_vs_ai: bool) -> void:
+func start_game(seed: int, ai_vs_ai: bool, mode: String = "CONQUEST", red_rolled: bool = false) -> void:
 	_clear()
-	Sim.start_match(seed, ai_vs_ai)
+	Sim.start_match(seed, ai_vs_ai, mode, red_rolled)
 	var game := GAME_SCENE.instantiate()
 	game.match_finished.connect(show_end)
 	add_child(game)
@@ -55,7 +57,7 @@ func show_end() -> void:
 	_clear()
 	var end := END_SCENE.instantiate()
 	end.setup(stats)
-	end.play_again.connect(func(): start_game(Sim.seed, Sim.ai_vs_ai))
+	end.play_again.connect(func(): start_game(Sim.seed, Sim.ai_vs_ai, Sim.spawn_mode, Sim.red_rolled))
 	end.menu.connect(show_menu)
 	add_child(end)
 	_current = end
