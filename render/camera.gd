@@ -16,9 +16,15 @@ func _ready() -> void:
 	limit_top = 0
 	limit_right = int(map_px.x)
 	limit_bottom = int(map_px.y)
-	position = map_px * 0.5
 	zoom = Vector2(0.6, 0.6)
+	position = map_px * 0.5
+	if Sim.world != null:
+		var hq := Sim.world.hq_of(Sim.player_team)
+		if hq != null:
+			# start over the player's HQ, shifted so the squad panel does not cover it
+			position = hq.centre_pos() * Balance.CELL_PX + Vector2(520, 0)
 	make_current()
+	_clamp()
 
 
 func _process(delta: float) -> void:

@@ -26,7 +26,7 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 - [x] M2 — Squads and movement (tests 7–9; squad cards, selection, MOVE orders, formations, variance, detached members).
 - [x] M3 — Flags, tickets, victory, Conquest spawning (tests 5, 6, 12; end screen).
 - [x] M4 — Combat (test 10; spotting, targeting, hit rolls, splash, veterancy, cover seeking, bounding, effects layer).
-- [ ] M5 — Vehicles.
+- [x] M5 — Vehicles (pads, mount/dismount with overflow on foot, driving, vehicle weapons, side change on capture; `M` mounts nearest, `X` dismounts, left-click an own vehicle to mount).
 - [ ] M6 — Destruction.
 - [ ] M7 — Fog and intel.
 - [ ] M8 — Assets.
@@ -52,4 +52,4 @@ Results with these values (10 seeded runs each): 6v3 riflemen 10/10, interior de
 
 ## Next
 
-- M5.
+- M6.

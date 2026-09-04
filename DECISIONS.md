@@ -22,3 +22,6 @@ One line per ambiguity: what was ambiguous, what was chosen, why.
 - Section 8.4's "squad in INTERIOR" scenario places the soldiers on interior cells adjacent to the wall facing the tank: with the spec's LOS rule a wall at the midpoint of the sight line blocks it, so only "window" cells can shoot out at 8 cells.
 - Artillery kills are credited to nobody (no XP); vehicle-destruction XP (+30) is awarded on top of +10 per occupant killed.
 - Vehicles are treated as loud (spotted at 16 cells) even by infantry spotters whose normal spot range is 14.
+- Empty enemy vehicles are valid targets (an AT soldier will destroy an abandoned enemy jeep rather than wait to capture it with the flag); the side-change rule only matters if the vehicle survives.
+- A pad vehicle whose flag is neutralised keeps its old team until the other team completes the capture.
+- The camera starts over the player's HQ, offset so the squad panel does not cover it.

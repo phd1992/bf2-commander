@@ -329,6 +329,31 @@ func spawn_vehicle(vtype: String, team: int, pos: Vector2, pad_index: int = -1) 
 	return v
 
 
+## Vehicle pads (Section 7.2): spawn for the owner when nothing from the pad
+## is alive and the respawn timer has elapsed.
+func _update_pads() -> void:
+	for i in pads.size():
+		var p: Dictionary = pads[i]
+		var v: Vehicle = p["vehicle"]
+		if v != null and v.alive:
+			continue
+		p["vehicle"] = null
+		var flag: Flag = flags[p["flag"]]
+		if flag.owner == Balance.Team.NONE or time + 0.0001 < p["respawn_at"]:
+			continue
+		p["vehicle"] = spawn_vehicle(p["vtype"], flag.owner, Grid.centre_of(p["cell"]), i)
+
+
+func pad_vehicle(flag_name: String, vtype: String) -> Vehicle:
+	var f := flag_by_name(flag_name)
+	if f == null:
+		return null
+	for p in pads:
+		if p["flag"] == f.id and p["vtype"] == vtype:
+			return p["vehicle"]
+	return null
+
+
 func board_vehicle(m: Member, v: Vehicle) -> void:
 	if v.free_seats() <= 0 or not v.alive:
 		return
@@ -529,6 +554,7 @@ func step(dt: float) -> void:
 	tick_count += 1
 	time = tick_count * dt
 	_execute_pending_orders()
+	_update_pads()
 	Movement.update(self, dt)
 	fog.update_spotting()
 	Combat.update(self, dt)
