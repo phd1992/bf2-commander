@@ -22,7 +22,7 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 ## Milestones
 
 - [x] M0 — Skeleton: project, autoload `Sim`, `balance.gd`, menu → game scene, camera, empty test runner.
-- [ ] M1 — Grid, terrain, elevation, pathfinding, LOS, generator.
+- [x] M1 — Grid, terrain, elevation, pathfinding, LOS, generator (tests 1–4, 15; `F1` draws HQ-to-HQ paths per class).
 - [ ] M2 — Squads and movement.
 - [ ] M3 — Flags, tickets, victory, Conquest spawning.
 - [ ] M4 — Combat.
@@ -39,4 +39,4 @@ godot --headless --script res://sim/run_headless.gd -- --matches 10 --seed 1
 
 ## Next
 
-- M1.
+- M2.
