@@ -19,6 +19,14 @@ var _units_layer: Node2D
 
 var selected: Array = []        # squad ids
 var pending_mode := ""          # "", "ATTACK", "DEFEND", "ASSET:UAV", ...
+var _help_label: Label          # descriptions column
+var _help_keys: Label           # keys column
+var _help_title: Label
+var _drag_start := Vector2(-1, -1)   # screen px of a left press on the map, or (-1,-1)
+var _drag_start_world := Vector2.ZERO
+var _dragging := false
+const DRAG_THRESHOLD_PX := 6.0
+const KEY_COL := 12
 
 
 func _ready() -> void:
@@ -28,6 +36,7 @@ func _ready() -> void:
 	_build_squad_panel()
 	_build_asset_bar()
 	_build_tooltip()
+	_build_help_panel()
 	_mode_label = Label.new()
 	_mode_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_mode_label.position = Vector2(-100, 40)
@@ -158,6 +167,111 @@ func _build_asset_bar() -> void:
 		_asset_buttons[name] = b
 
 
+## Bottom-right panel listing what the mouse and keys do right now.
+func _build_help_panel() -> void:
+	var panel := PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var v := VBoxContainer.new()
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_help_title = Label.new()
+	_help_title.add_theme_font_size_override("font_size", 13)
+	_help_title.modulate = Color(1, 0.9, 0.4)
+	v.add_child(_help_title)
+	var cols := HBoxContainer.new()
+	cols.add_theme_constant_override("separation", 12)
+	cols.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_help_keys = Label.new()
+	_help_keys.add_theme_font_size_override("font_size", 13)
+	_help_keys.modulate = Color(1, 0.95, 0.7)
+	_help_keys.custom_minimum_size = Vector2(110, 0)
+	cols.add_child(_help_keys)
+	_help_label = Label.new()
+	_help_label.add_theme_font_size_override("font_size", 13)
+	_help_label.custom_minimum_size = Vector2(300, 0)
+	cols.add_child(_help_label)
+	v.add_child(cols)
+	panel.add_child(v)
+	add_child(panel)
+
+
+## A help line is "key|what"; the two halves go to the two columns.
+static func _line(key: String, what: String) -> String:
+	return key + "|" + what
+
+
+## Context-sensitive help lines, most specific first.
+func _help_lines(w: World) -> Array:
+	var lines: Array = []
+	var sel := _selected_squads()
+	if pending_mode.begins_with("ASSET:"):
+		_help_title.text = "Aiming %s" % pending_mode.trim_prefix("ASSET:").capitalize()
+		lines.append(_line("Left-click", "Place it here (circle = radius)"))
+		lines.append(_line("Esc", "Cancel"))
+		return lines
+	if pending_mode == "ATTACK":
+		_help_title.text = "Attack-move"
+		lines.append(_line("Left-click", "Attack-move the selected squads here"))
+		lines.append(_line("Esc", "Cancel"))
+		return lines
+	if pending_mode == "DEFEND":
+		_help_title.text = "Defend"
+		lines.append(_line("Left-click", "Defend the flag nearest the click"))
+		lines.append(_line("Esc", "Cancel"))
+		return lines
+	# hover-specific line
+	var hover = _unit_at(w, _game.mouse_pos_cells())
+	var hover_flag := _flag_containing(w, _game.mouse_cell())
+	if sel.is_empty():
+		_help_title.text = "No squad selected"
+		if hover != null and not hover.is_vehicle() and hover.team == Sim.player_team:
+			lines.append(_line("Left-click", "Select %s" % hover.squad.name))
+		lines.append(_line("Left-click", "Select the squad of a soldier"))
+		lines.append(_line("Drag", "Box-select squads (Shift adds)"))
+		lines.append(_line("1-4 / cards", "Select squad (Shift adds)"))
+		lines.append(_line("Q W E R", "UAV / Artillery / Supply / Vehicle drop"))
+		lines.append(_line("Space", "Pause      -/= speed"))
+		lines.append(_line("WASD, wheel", "Pan, zoom"))
+		return lines
+	var names: Array = []
+	var mounted := false
+	var wiped := true
+	for s in sel:
+		names.append(s.name)
+		if s.is_mounted():
+			mounted = true
+		if not s.is_wiped():
+			wiped = false
+	_help_title.text = "Selected: " + ", ".join(names)
+	if wiped:
+		lines.append(_line("Card", "Choose spawn point / buy the squad back"))
+		return lines
+	if hover != null and hover.is_vehicle() and hover.team == Sim.player_team and hover.is_idle():
+		lines.append(_line("Right-click", "Board %s (%d seats)" % [hover.vtype, hover.seats]))
+	elif hover_flag != null and not hover_flag.is_hq:
+		if hover_flag.owner == Sim.player_team:
+			lines.append(_line("Right-click", "Defend flag %s" % hover_flag.name))
+		else:
+			lines.append(_line("Right-click", "Attack flag %s" % hover_flag.name))
+	if mounted:
+		lines.append(_line("Right-click", "Drive there"))
+		lines.append(_line("Right-click flag", "Attack/defend: jeep & APC drop troops, driver+gunner stay"))
+		lines.append(_line("", "Tank crews stay aboard"))
+		lines.append(_line("X", "Everyone out"))
+	else:
+		lines.append(_line("Right-click", "Move here"))
+		lines.append(_line("Right-click flag", "Attack it (enemy/neutral) or defend it (yours)"))
+		lines.append(_line("Right-click", "...own empty vehicle: board it"))
+		lines.append(_line("M", "Board the nearest empty vehicle"))
+		lines.append(_line("A + click", "Attack-move    D + click: defend flag"))
+		lines.append(_line("H", "Hold and take cover"))
+	lines.append(_line("Shift+click", "Add a squad to the selection"))
+	lines.append(_line("Q W E R", "Assets    Space pause    -/= speed"))
+	return lines
+
+
 func _build_tooltip() -> void:
 	_tooltip = Label.new()
 	_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -186,10 +300,29 @@ func _process(_delta: float) -> void:
 	_refresh_assets(w)
 	_update_tooltip(w)
 	_mode_label.text = "" if pending_mode == "" else "%s: click the map (ESC cancels)" % pending_mode
+	if Sim.ai_vs_ai:
+		_help_title.text = "Watching AI vs AI"
+		_help_keys.text = "Space\n-/=\nWASD, wheel"
+		_help_label.text = "Pause\nSpeed\nPan, zoom"
+	else:
+		var keys: Array = []
+		var whats: Array = []
+		for l in _help_lines(w):
+			var parts: PackedStringArray = l.split("|", true, 1)
+			keys.append(parts[0])
+			whats.append(parts[1] if parts.size() > 1 else "")
+		_help_keys.text = "\n".join(keys)
+		_help_label.text = "\n".join(whats)
 	if _units_layer != null:
 		_units_layer.selected_ids = selected
 		_units_layer.ghost_asset = pending_mode.trim_prefix("ASSET:") if pending_mode.begins_with("ASSET:") else ""
 		_units_layer.ghost_cell = _game.mouse_cell()
+		_units_layer.hover_unit = _unit_at(w, _game.mouse_pos_cells()) if not Sim.ai_vs_ai else null
+		if _dragging:
+			var now_world: Vector2 = _game.mouse_pos_cells() * float(Balance.CELL_PX)
+			_units_layer.drag_rect = Rect2(_drag_start_world, now_world - _drag_start_world)
+		else:
+			_units_layer.drag_rect = Rect2()
 
 
 func _refresh_flags(w: World) -> void:
@@ -225,16 +358,41 @@ func _refresh_cards(w: World) -> void:
 			# ASCII on purpose: the web build's fallback font has no dot glyphs
 			dots += "O" if m.is_alive() else "x"
 			dots += " "
-		c["dots"].text = dots + ("  [%s]" % s.vehicle.vtype if s.vehicle != null and s.is_mounted() else "")
+		var veh_text := ""
+		if s.vehicle != null and s.vehicle.alive:
+			var own := w.crew_of(s, s.vehicle)
+			if s.is_mounted():
+				veh_text = "  [%s %d/%d]" % [s.vehicle.vtype, s.vehicle.occupants.size(), s.vehicle.seats]
+			elif own > 0:
+				veh_text = "  [crew of %d in %s]" % [own, s.vehicle.vtype]
+		c["dots"].text = dots + veh_text
 		c["hp"].value = s.avg_hp()
 		var next_thr: int = Balance.XP_THRESHOLDS[mini(s.xp_level, Balance.XP_THRESHOLDS.size() - 1)]
 		c["xp"].max_value = next_thr
 		c["xp"].value = mini(s.xp, next_thr)
-		c["order"].text = s.order_text() + ("   kills %d" % s.kills)
+		var order_text := s.order_text()
+		if not s.pending.is_empty():
+			order_text = "%s in %d s" % [_pending_text(s), int(ceil(s.pending["at"] - w.time))]
+		c["order"].text = order_text + ("   kills %d" % s.kills)
 		var sel := s.id in selected
 		c["panel"].modulate = Color(1, 1, 1) if sel else Color(0.75, 0.75, 0.8)
 		c["panel"].self_modulate = Color(1.3, 1.3, 0.9) if sel else Color(1, 1, 1)
 		_refresh_spawn_selector(w, s, c)
+
+
+static func _order_name(o: Dictionary) -> String:
+	match o.get("type", Balance.Order.NONE):
+		Balance.Order.MOVE: return "MOVE"
+		Balance.Order.ATTACK: return "ATTACK %s" % o["flag"].name
+		Balance.Order.DEFEND: return "DEFEND %s" % o["flag"].name
+		Balance.Order.MOUNT: return "BOARD %s" % (o["vehicle"].vtype if o.get("vehicle") != null else "")
+		Balance.Order.HOLD: return "HOLD"
+		Balance.Order.DISMOUNT: return "DISMOUNT"
+	return ""
+
+
+func _pending_text(s: Squad) -> String:
+	return _order_name(s.pending)
 
 
 func _refresh_spawn_selector(w: World, s: Squad, c: Dictionary) -> void:
@@ -326,9 +484,13 @@ func _update_tooltip(w: World) -> void:
 	var unit = _unit_at(w, _game.mouse_pos_cells())
 	if unit != null:
 		if unit.is_vehicle():
-			text += "\n%s %s  HP %d  crew %d" % [Balance.TEAM_NAMES[unit.team], unit.vtype, int(unit.hp), unit.occupants.size()]
+			text += "\n%s %s  HP %d  crew %d/%d" % [Balance.TEAM_NAMES[unit.team], unit.vtype, int(unit.hp), unit.occupants.size(), unit.seats]
+			if unit.team == Sim.player_team and unit.is_idle() and not Sim.ai_vs_ai:
+				text += "\nRight-click with a squad selected: board"
 		else:
 			text += "\n%s %s  HP %d" % [unit.squad.name, unit.kit_name(), int(unit.hp)]
+			if unit.team == Sim.player_team and not Sim.ai_vs_ai:
+				text += "\nLeft-click: select %s" % unit.squad.name
 	_tooltip.text = text
 	_tooltip.position = get_viewport().get_mouse_position() + Vector2(14, 14)
 
@@ -417,57 +579,159 @@ func _select_asset(name: String) -> void:
 	pending_mode = "ASSET:" + name
 
 
-func handle_click(event: InputEventMouseButton, cell: Vector2i, pos: Vector2) -> void:
+## All mouse events on the map arrive here (press, release, motion).
+func handle_mouse(event: InputEvent, cell: Vector2i, pos: Vector2) -> void:
 	var w: World = Sim.world
-	if not w.grid.in_bounds(cell) or Sim.ai_vs_ai:
+	if Sim.ai_vs_ai:
 		return
-	if event.button_index == MOUSE_BUTTON_RIGHT:
+	if event is InputEventMouseMotion:
+		if _drag_start.x >= 0 and not _dragging and event.position.distance_to(_drag_start) > DRAG_THRESHOLD_PX:
+			_dragging = true
+		return
+	if not (event is InputEventMouseButton):
+		return
+	if event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			if not w.grid.in_bounds(cell):
+				return
+			if pending_mode != "":
+				_apply_pending_click(w, cell)
+				return
+			_drag_start = event.position
+			_drag_start_world = pos * float(Balance.CELL_PX)
+			_dragging = false
+		else:
+			if _drag_start.x < 0:
+				return
+			if _dragging:
+				_select_in_box(w, _drag_start_world, pos * float(Balance.CELL_PX), event.shift_pressed)
+			else:
+				_left_click(w, cell, pos, event.shift_pressed)
+			_drag_start = Vector2(-1, -1)
+			_dragging = false
+	elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		if not w.grid.in_bounds(cell):
+			return
 		pending_mode = ""
-		_order_at(cell, false)
-		return
-	if event.button_index != MOUSE_BUTTON_LEFT:
-		return
+		_order_at(cell, pos, false)
+
+
+func _apply_pending_click(w: World, cell: Vector2i) -> void:
 	if pending_mode.begins_with("ASSET:"):
 		var name := pending_mode.trim_prefix("ASSET:")
-		if "assets" in w and w.assets != null:
-			w.assets.use(Sim.player_team, name, cell)
-		pending_mode = ""
-		return
-	if pending_mode == "ATTACK":
-		_order_at(cell, true)
-		pending_mode = ""
-		return
-	if pending_mode == "DEFEND":
+		if w.assets.use(Sim.player_team, name, cell):
+			_ping(Grid.centre_of(cell), name.capitalize())
+	elif pending_mode == "ATTACK":
+		_order_at(cell, Grid.centre_of(cell), true)
+	elif pending_mode == "DEFEND":
 		var f := _nearest_flag(w, cell, false)
 		if f != null:
 			for s in _selected_squads():
 				w.give_order(s, Balance.Order.DEFEND, cell, f)
-		pending_mode = ""
-		return
-	# plain left click: own idle vehicle -> MOUNT
+			_ping(f.centre_pos(), "DEFEND %s" % f.name)
+	pending_mode = ""
+
+
+## Plain left click: select the squad of a soldier / crewed vehicle, or board
+## an own empty vehicle with the selection.
+func _left_click(w: World, cell: Vector2i, pos: Vector2, add: bool) -> void:
 	var unit = _unit_at(w, pos)
-	if unit != null and unit.is_vehicle() and unit.team == Sim.player_team:
-		for s in _selected_squads():
-			w.give_order(s, Balance.Order.MOUNT, cell, null, unit)
+	if unit == null:
+		if not add:
+			selected = []
+		return
+	if unit.team != Sim.player_team:
+		return
+	if unit.is_vehicle():
+		if unit.is_idle():
+			_board(w, unit)
+		elif unit.owner_squad != null:
+			_select_squad(unit.owner_squad, add)
+		return
+	_select_squad(unit.squad, add)
 
 
-## Right-click / attack-move: MOVE to a cell, ATTACK a non-own flag, DEFEND an own flag.
-func _order_at(cell: Vector2i, attack_move: bool) -> void:
-	var w: World = Sim.world
-	var f := _flag_containing(w, cell)
+func _select_squad(s: Squad, add: bool) -> void:
+	if add:
+		if s.id in selected:
+			selected.erase(s.id)
+		else:
+			selected.append(s.id)
+	else:
+		selected = [s.id]
+
+
+func _select_in_box(w: World, a: Vector2, b: Vector2, add: bool) -> void:
+	var r := Rect2(a, b - a).abs()
+	var hit: Array = []
+	for s in w.squads_of(Sim.player_team):
+		for m in s.members:
+			if m.is_alive() and r.has_point(m.pos * float(Balance.CELL_PX)):
+				hit.append(s.id)
+				break
+	if not add:
+		selected = []
+	for id in hit:
+		if id not in selected:
+			selected.append(id)
+
+
+## Sends as many selected squads as the free seats can take (a jeep or a
+## tank takes one squad, an APC one full squad).
+func _board(w: World, v: Vehicle) -> void:
+	var capacity := v.free_seats()
+	var names: Array = []
 	for s in _selected_squads():
+		if s.is_wiped() or capacity <= 0:
+			continue
+		w.give_order(s, Balance.Order.MOUNT, v.cell(), null, v)
+		capacity -= s.alive_count()
+		names.append(s.name)
+	if not names.is_empty():
+		_ping(v.pos, "BOARD %s: %s" % [v.vtype, ", ".join(names)])
+
+
+## Visual confirmation of an order at its target.
+func _ping(pos: Vector2, text: String) -> void:
+	Sim.world.events.append({ "type": "order_ping", "pos": pos, "text": text })
+
+
+## Right-click / attack-move: board an own empty vehicle, ATTACK a non-own
+## flag, DEFEND an own flag, or MOVE to a cell.
+func _order_at(cell: Vector2i, pos: Vector2, attack_move: bool) -> void:
+	var w: World = Sim.world
+	var sel := _selected_squads()
+	if sel.is_empty():
+		return
+	if not attack_move:
+		var unit = _unit_at(w, pos)
+		if unit != null and unit.is_vehicle() and unit.team == Sim.player_team and unit.is_idle():
+			_board(w, unit)
+			return
+	var f := _flag_containing(w, cell)
+	var text := "MOVE"
+	for s in sel:
+		if s.is_wiped():
+			continue
 		if f != null and not f.is_hq:
 			if f.owner == s.team:
 				w.give_order(s, Balance.Order.DEFEND, cell, f)
+				text = "DEFEND %s" % f.name
 			else:
 				w.give_order(s, Balance.Order.ATTACK, cell, f)
+				text = "ATTACK %s" % f.name
 		else:
 			w.give_order(s, Balance.Order.MOVE, cell)
+			text = "ATTACK-MOVE" if attack_move else "MOVE"
+	_ping(f.centre_pos() if f != null and not f.is_hq else Grid.centre_of(cell), text)
 
 
 func _order_all(type: int) -> void:
 	for s in _selected_squads():
+		if s.is_wiped() or s.leader == null:
+			continue
 		Sim.world.give_order(s, type)
+		_ping(s.leader.pos, "HOLD" if type == Balance.Order.HOLD else "DISMOUNT")
 
 
 func _mount_nearest() -> void:
@@ -485,6 +749,7 @@ func _mount_nearest() -> void:
 					best = v
 		if best != null:
 			w.give_order(s, Balance.Order.MOUNT, best.cell(), null, best)
+			_ping(best.pos, "BOARD %s" % best.vtype)
 
 
 func _flag_containing(w: World, cell: Vector2i) -> Flag:

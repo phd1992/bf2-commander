@@ -32,7 +32,6 @@ func update(w: World) -> void:
 
 func tick(w: World) -> void:
 	var contacts := w.fog.revealed_contacts(team, w.time)
-	_rule_auto_dismount(w)
 	if enabled["purchases"]:
 		_rule_purchases(w)
 	if enabled["defend"]:
@@ -199,18 +198,8 @@ func _rule_vehicle_drop(w: World) -> void:
 		w.assets.use(team, "VEHICLE_DROP", hq.centre)
 
 
-## 8b. Mounted squads dismount when the vehicle is close to the destination.
-func _rule_auto_dismount(w: World) -> void:
-	for s in _living_squads(w):
-		if not s.is_mounted() or s.vehicle == null:
-			continue
-		var dest: Vector2i = s.destination()
-		if s.order_type() == Balance.Order.MOUNT or dest.x < 0:
-			continue
-		if s.vehicle.pos.distance_to(Grid.centre_of(dest)) <= Balance.AI_DISMOUNT_DIST:
-			w.dismount_squad(s)
-			s.arrived = false
-
+## 8b. Dismounting near the destination is handled for every team by
+## World._auto_dismount() (troop carriers drop passengers, tanks stay crewed).
 
 ## 9 (Broken Arrow). Buy wiped squads back first, then armour when rich.
 func _rule_purchases(w: World) -> void:

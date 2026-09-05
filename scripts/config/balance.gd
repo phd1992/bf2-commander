@@ -131,10 +131,14 @@ const XP_THRESHOLDS := [100, 250]
 # ---------------------------------------------------------------------------
 
 const VEHICLES := {
-	"JEEP": { "mclass": MoveClass.WHEELED, "hp": 150.0, "seats": 4, "speed": 5.0, "weapons": ["HMG"], "size_px": Vector2(20, 12) },
-	"APC":  { "mclass": MoveClass.TRACKED, "hp": 400.0, "seats": 6, "speed": 3.0, "weapons": ["AUTOCANNON"], "size_px": Vector2(28, 16) },
-	"TANK": { "mclass": MoveClass.TRACKED, "hp": 800.0, "seats": 2, "speed": 2.5, "weapons": ["CANNON", "HMG"], "size_px": Vector2(32, 18) },
+	"JEEP": { "mclass": MoveClass.WHEELED, "hp": 150.0, "seats": 4, "speed": 5.0, "weapons": ["HMG"], "size_px": Vector2(20, 12), "troop_carrier": true, "keep_crew": 2 },
+	"APC":  { "mclass": MoveClass.TRACKED, "hp": 400.0, "seats": 6, "speed": 3.0, "weapons": ["AUTOCANNON"], "size_px": Vector2(28, 16), "troop_carrier": true, "keep_crew": 2 },
+	"TANK": { "mclass": MoveClass.TRACKED, "hp": 800.0, "seats": 2, "speed": 2.5, "weapons": ["CANNON", "HMG"], "size_px": Vector2(32, 18), "troop_carrier": false, "keep_crew": 2 },
 }
+# Troop carriers drop their passengers when an ATTACK/DEFEND order reaches the
+# flag (within AUTO_DISMOUNT_DIST), keeping `keep_crew` aboard as driver and
+# gunner so the vehicle keeps fighting. Tanks never auto-dismount.
+const AUTO_DISMOUNT_DIST := 4.0
 const VEHICLE_MIN_CREW := 2
 const PAD_RESPAWN_S := 60.0
 const PAD_SEARCH_DIST := 3

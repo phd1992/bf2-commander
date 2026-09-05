@@ -53,9 +53,26 @@ it works on any static host without special headers). Two ways:
 
 ## Controls
 
-WASD / arrows / middle-drag pan, wheel zooms. `1`–`4` select squads (`Shift`
-adds), right-click orders MOVE / ATTACK / DEFEND, `A` + click attack-move, `D` +
-click defend nearest flag, `M` mount nearest vehicle, `X` dismount, `H` hold,
-`Q`/`W`/`E`/`R` then click for UAV / artillery / supply / vehicle drop, `SPACE`
-pauses, `-`/`=` change speed, `F1` draws HQ-to-HQ paths, `F2` fires free debug
-artillery at the mouse.
+A panel in the bottom-right corner always lists what the mouse and keys do in
+the current situation. In short:
+
+- **Select**: left-click one of your soldiers, drag a box around several
+  squads, click a squad card, or press `1`–`4`. `Shift` adds to the selection.
+- **Move / attack / defend**: right-click the ground to move; right-click a
+  flag to attack it (enemy or neutral) or defend it (yours). `A` + click is an
+  attack-move, `D` + click defends the nearest flag, `H` holds and takes cover.
+- **Vehicles**: right-click one of your empty vehicles (they pulse and are
+  labelled `JEEP 0/4`, `TANK 0/2`) to board it with the selected squad; `M`
+  boards the nearest one. A mounted squad drives wherever you right-click.
+  When a jeep or APC reaches a flag you ordered it to attack or defend, the
+  troops get out and a driver + gunner stay aboard so the vehicle keeps
+  firing; tank crews stay in the tank. `X` gets everyone out. Pads show which
+  vehicle they spawn and which flag you must own for it.
+- **Assets**: `Q`/`W`/`E`/`R` (or the bottom buttons), then click the map;
+  the circle shows the radius. `Esc` cancels.
+- **Camera and time**: WASD / arrows / middle-drag pan, wheel zooms, `Space`
+  pauses, `-`/`=` change speed. `F1` draws HQ-to-HQ paths, `F2` fires free
+  debug artillery at the mouse.
+
+Every order shows a yellow ping at its target and a countdown on the squad
+card until the squad's Discipline delay elapses.

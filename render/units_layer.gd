@@ -11,9 +11,14 @@ var player_team: int = Balance.Team.BLUE
 ## Asset being aimed ("" = none) and the cell under the mouse, set by the HUD.
 var ghost_asset := ""
 var ghost_cell := Vector2i(-1, -1)
+## Box selection in world px (zero size = none) and the unit under the mouse.
+var drag_rect := Rect2()
+var hover_unit = null
+var _pulse := 0.0
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_pulse += delta
 	queue_redraw()
 
 
@@ -29,6 +34,18 @@ func _draw() -> void:
 	_draw_contacts(w)
 	_draw_orders(w)
 	_draw_ghost(w)
+	_draw_hover_and_drag()
+
+
+func _draw_hover_and_drag() -> void:
+	if hover_unit != null and hover_unit.is_alive():
+		var c: Vector2 = hover_unit.pos * PX
+		var r := 14.0 if hover_unit.is_vehicle() else MEMBER_RADIUS + 5.0
+		draw_arc(c, r, 0, TAU, 24, Color(1, 1, 1, 0.9), 2.0)
+	if drag_rect.size != Vector2.ZERO:
+		var r := drag_rect.abs()
+		draw_rect(r, Color(1, 1, 1, 0.08))
+		draw_rect(r, Color(1, 1, 1, 0.8), false, 1.5)
 
 
 func _draw_ghost(w: World) -> void:
@@ -66,9 +83,15 @@ func _draw_flags(w: World) -> void:
 
 
 func _draw_pads(w: World) -> void:
+	var font := ThemeDB.fallback_font
 	for p in w.pads:
 		var c: Vector2 = Grid.centre_of(p["cell"]) * PX
 		draw_rect(Rect2(c - Vector2(10, 6), Vector2(20, 12)), Color(1, 1, 1, 0.25), false, 1.0)
+		var flag: Flag = w.flags[p["flag"]]
+		var label: String = "%s pad" % p["vtype"]
+		if flag.owner == Balance.Team.NONE:
+			label += " (capture %s)" % flag.name
+		draw_string(font, c + Vector2(-26, 24), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1, 1, 1, 0.7))
 
 
 func _draw_assets(w: World) -> void:
@@ -116,7 +139,13 @@ func _draw_vehicles(w: World) -> void:
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 		var hp_frac := v.hp / v.max_hp
 		draw_rect(Rect2(c + Vector2(-12, -size.y * 0.5 - 8), Vector2(24 * hp_frac, 3)), Color(0.3, 1, 0.3))
-		draw_string(ThemeDB.fallback_font, c + Vector2(-12, size.y * 0.5 + 14), "%s %d" % [v.vtype, v.occupants.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, 0.8))
+		var label := "%s %d/%d" % [v.vtype, v.occupants.size(), v.seats]
+		if v.team == player_team and v.is_idle() and not Sim.ai_vs_ai:
+			# own empty vehicle: pulse so it reads as "boardable"
+			var a := 0.35 + 0.35 * (0.5 + 0.5 * sin(_pulse * 3.0))
+			draw_arc(c, maxf(size.x, size.y) * 0.5 + 6, 0, TAU, 24, Color(1, 1, 1, a), 1.5)
+			label += "  board: RMB"
+		draw_string(ThemeDB.fallback_font, c + Vector2(-14, size.y * 0.5 + 14), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, 0.85))
 
 
 func _visible_set(w: World) -> Dictionary:

@@ -38,6 +38,10 @@ func _add(e: Dictionary) -> void:
 				_effects.append({ "type": "collapse", "pos": Grid.centre_of(c), "until": _wall + 1.0, "start": _wall })
 		"vehicle_destroyed":
 			_effects.append({ "type": "impact", "pos": e["pos"], "radius": 2.0, "until": _wall + 1.0, "start": _wall })
+		"order_ping":
+			_effects.append({ "type": "order_ping", "pos": e["pos"], "text": e["text"], "until": _wall + 1.2, "start": _wall })
+		"dismount":
+			_effects.append({ "type": "capture", "pos": e["pos"], "team": e["team"], "until": _wall + 0.6, "start": _wall })
 		"squad_respawn":
 			_effects.append({ "type": "capture", "pos": Grid.centre_of(e["cell"]), "team": e["squad"].team, "until": _wall + 1.0, "start": _wall })
 
@@ -69,6 +73,11 @@ func _draw() -> void:
 				var c: Vector2 = fx["pos"] * PX
 				var col := Balance.COLOR_BLUE if fx["team"] == Balance.Team.BLUE else Balance.COLOR_RED
 				draw_arc(c, Balance.FLAG_RADIUS * PX * (1.0 + 0.5 * t), 0, TAU, 48, Color(col, 1.0 - t), 4.0)
+			"order_ping":
+				var c: Vector2 = fx["pos"] * PX
+				var col := Color(1, 0.9, 0.3, 1.0 - t)
+				draw_arc(c, 26.0 * (1.0 - t) + 6.0, 0, TAU, 24, col, 2.5)
+				draw_string(ThemeDB.fallback_font, c + Vector2(-20, -22 - 10 * t), fx["text"], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, col)
 			"collapse":
 				var c: Vector2 = fx["pos"] * PX
 				draw_circle(c, PX * 0.6 * (1.0 + t), Color(0.5, 0.45, 0.4, 0.8 * (1.0 - t)))

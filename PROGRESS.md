@@ -22,6 +22,10 @@ godot -- --autoplay [--ai] [--broken-arrow] [--red-rolled] [--seed=N] [--speed=4
 
 `godot` is any Godot 4.4+ stable Linux editor binary on PATH (the tests were run with 4.4.1).
 
+## UX pass (after the first browser playtest)
+
+Bottom-right context help panel (what each mouse button and key does right now), click and box selection of squads on the map, right-click to board vehicles, pulsing labels on empty own vehicles and pads, order pings and Discipline countdowns on the cards, and the jeep/APC arrival rule (troops out, driver + gunner stay; tanks stay crewed). Verified in headless Chromium by scripting drag-select → board jeep → attack A.
+
 ## Web build
 
 `export_presets.cfg` has a "Web" preset (GL Compatibility, thread support off). `godot --headless --export-release Web build/web/index.html` produces a ~44 MB build that was verified to load and run in headless Chromium with no console errors. `.github/workflows/web.yml` builds and deploys it to GitHub Pages on push (enable Pages with source "GitHub Actions" once).

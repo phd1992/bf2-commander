@@ -74,9 +74,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				Sim.speed_up()
 		if hud.has_method("handle_key"):
 			hud.handle_key(event)
-	elif event is InputEventMouseButton and event.pressed:
-		if hud.has_method("handle_click"):
-			hud.handle_click(event, mouse_cell(), mouse_pos_cells())
+	elif event is InputEventMouseButton or event is InputEventMouseMotion:
+		if hud.has_method("handle_mouse"):
+			hud.handle_mouse(event, mouse_cell(), mouse_pos_cells())
 
 
 func _toggle_debug_paths() -> void:

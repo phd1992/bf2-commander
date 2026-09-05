@@ -156,3 +156,68 @@ func test_tracked_vehicle_avoids_forest_and_water() -> void:
 			bad = true
 	check(not bad, "APC never enters water or forest")
 	check(apc.pos.x > 30.0, "APC crossed via the road bridge (at %s)" % str(apc.pos))
+
+
+func _mounted_squad(w: World, vtype: String, pos: Vector2) -> Array:
+	var v := w.spawn_vehicle(vtype, Balance.Team.BLUE, pos)
+	var s := w.create_squad(Balance.Team.BLUE, "M", [3, 5, 3, 3], pos + Vector2(1, 1))
+	for m in s.members:
+		w.board_vehicle(m, v)
+	s.order = {}
+	s.order_completed = true
+	return [s, v]
+
+
+func test_jeep_drops_troops_but_keeps_crew_at_the_flag() -> void:
+	var w := World.new()
+	w.setup_blank(1, 60, 40, T.OPEN)
+	var flag := w.add_flag("A", Vector2i(40, 20))
+	var pair := _mounted_squad(w, "JEEP", Vector2(10.5, 20.5))
+	var s: Squad = pair[0]
+	var jeep: Vehicle = pair[1]
+	check_eq(jeep.occupants.size(), 4, "four aboard the jeep")
+	w.give_order(s, Balance.Order.ATTACK, flag.centre, flag, null, 0.0)
+	run_seconds(w, 25.0)
+	check(not s.is_mounted(), "leader got out at the flag")
+	check_eq(jeep.occupants.size(), 2, "driver and gunner stayed aboard")
+	check(jeep.can_fire(), "the jeep can still shoot")
+	check_eq(jeep.owner_squad, s, "the squad still owns the jeep")
+	check(jeep.pos.distance_to(flag.centre_pos()) <= Balance.AUTO_DISMOUNT_DIST + 1.5, "jeep stopped near the flag")
+	for m in s.members:
+		if m.is_on_foot():
+			check(m.pos.distance_to(flag.centre_pos()) <= 6.0, "dismounted soldier near the flag")
+	run_seconds(w, 25.0)
+	check_eq(flag.owner, Balance.Team.BLUE, "the squad captured the flag on foot")
+	# X still empties the vehicle completely
+	w.give_order(s, Balance.Order.DISMOUNT, Vector2i(-1, -1), null, null, 0.0)
+	run_ticks(w, 2)
+	check_eq(jeep.occupants.size(), 0, "X gets the crew out too")
+
+
+func test_tank_crew_stays_aboard() -> void:
+	var w := World.new()
+	w.setup_blank(2, 60, 40, T.OPEN)
+	var flag := w.add_flag("A", Vector2i(30, 20))
+	var pair := _mounted_squad(w, "TANK", Vector2(10.5, 20.5))
+	var s: Squad = pair[0]
+	var tank: Vehicle = pair[1]
+	check_eq(tank.occupants.size(), 2, "two in the tank, four walking")
+	w.give_order(s, Balance.Order.ATTACK, flag.centre, flag, null, 0.0)
+	run_seconds(w, 30.0)
+	check(s.is_mounted(), "tank crew stays aboard at the flag")
+	check_eq(tank.occupants.size(), 2, "still two aboard")
+	check(tank.pos.distance_to(flag.centre_pos()) <= 3.0, "tank parked at the flag")
+
+
+func test_move_order_keeps_everyone_aboard() -> void:
+	var w := World.new()
+	w.setup_blank(3, 60, 40, T.OPEN)
+	w.add_flag("A", Vector2i(40, 20))
+	var pair := _mounted_squad(w, "APC", Vector2(10.5, 20.5))
+	var s: Squad = pair[0]
+	var apc: Vehicle = pair[1]
+	w.give_order(s, Balance.Order.MOVE, Vector2i(40, 20), null, null, 0.0)
+	run_seconds(w, 25.0)
+	check(s.is_mounted(), "plain MOVE keeps the squad mounted")
+	check_eq(apc.occupants.size(), 6, "all six still in the APC")
+	check(apc.pos.distance_to(Vector2(40.5, 20.5)) <= 2.5, "APC reached the destination")

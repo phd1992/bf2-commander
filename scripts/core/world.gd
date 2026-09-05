@@ -329,9 +329,9 @@ func _apply_order(s: Squad, o: Dictionary) -> void:
 	s.path.clear()
 	s.path_goal = Vector2i(-1, -1)
 	s.pursue_goal = Vector2i(-1, -1)
-	if type == Balance.Order.MOUNT and o.get("vehicle") != null:
-		s.order["vehicle"].owner_squad = s
-		s.vehicle = s.order["vehicle"]
+	# A MOUNT order does not claim the vehicle; board_vehicle() does when the
+	# first member actually gets in, so two squads sent to one jeep cannot
+	# both think they own it.
 	var dest := s.destination()
 	if dest.x >= 0:
 		s.last_order_cell = dest
@@ -385,6 +385,15 @@ func pad_vehicle(flag_name: String, vtype: String) -> Vehicle:
 	return null
 
 
+## Members of `s` currently inside `v`.
+func crew_of(s: Squad, v: Vehicle) -> int:
+	var n := 0
+	for m in v.occupants:
+		if m.squad == s:
+			n += 1
+	return n
+
+
 func board_vehicle(m: Member, v: Vehicle) -> void:
 	if v.free_seats() <= 0 or not v.alive:
 		return
@@ -427,6 +436,43 @@ func unboard_member(m: Member, v: Vehicle) -> void:
 		m.pos = Grid.centre_of(c) if c.x >= 0 else v.pos
 	m.detached = false
 	m.path.clear()
+
+
+## Troop-carrier arrival: the leader and passengers get out, `keep_crew`
+## non-leader occupants stay aboard as driver and gunner. The squad keeps
+## owning the vehicle; the crew counts as squad members in every other way.
+func partial_dismount(s: Squad, keep_crew: int) -> void:
+	var v := s.vehicle
+	if v == null:
+		return
+	var crew: Array = []
+	for m in v.occupants:
+		if m != s.leader and crew.size() < keep_crew:
+			crew.append(m)
+	for m in v.occupants.duplicate():
+		if m not in crew:
+			unboard_member(m, v)
+	s.refresh_leader()
+	if v.occupants.is_empty():
+		v.owner_squad = null
+		s.vehicle = null
+	events.append({ "type": "dismount", "pos": v.pos, "team": s.team })
+
+
+## Applies the arrival rule for every team each tick (Section 7.3 / UX pass).
+func _auto_dismount() -> void:
+	for s in squads:
+		if not s.is_mounted() or s.vehicle == null:
+			continue
+		var t := s.order_type()
+		if t != Balance.Order.ATTACK and t != Balance.Order.DEFEND:
+			continue
+		var spec: Dictionary = Balance.VEHICLES[s.vehicle.vtype]
+		if not spec["troop_carrier"]:
+			continue
+		if s.vehicle.pos.distance_to(Grid.centre_of(s.destination())) <= Balance.AUTO_DISMOUNT_DIST:
+			partial_dismount(s, spec["keep_crew"])
+			s.arrived = false
 
 
 func dismount_squad(s: Squad) -> void:
@@ -617,6 +663,7 @@ func step(dt: float) -> void:
 	_execute_pending_orders()
 	_update_pads()
 	Movement.update(self, dt)
+	_auto_dismount()
 	fog.update_spotting()
 	Combat.update(self, dt)
 	_apply_collapses()

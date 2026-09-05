@@ -375,7 +375,11 @@ static func _handle_mount(w: World, s: Squad, m: Member, dt: float) -> bool:
 	if v == null or not v.alive or v.team != s.team:
 		return false
 	if v.free_seats() <= 0:
-		return false   # seats full: continue on foot toward the destination
+		# Seats full. If none of this squad got in, the vehicle went to someone
+		# else: drop the order instead of walking to a full vehicle forever.
+		if w.crew_of(s, v) == 0:
+			s.order_completed = true
+		return false
 	if m.pos.distance_to(v.pos) <= Balance.MOUNT_DIST:
 		w.board_vehicle(m, v)
 		return true
