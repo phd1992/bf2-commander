@@ -2,6 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="map.css">
 
 <header class="masthead">
   <div class="wrap">
@@ -24,6 +25,7 @@
     <div class="seg" role="group" aria-label="View">
       <button type="button" id="view-cards" aria-pressed="true">Cards</button>
       <button type="button" id="view-list" aria-pressed="false">List</button>
+      <button type="button" id="view-map" aria-pressed="false">Map</button>
     </div>
     <div class="toolbar-right">
       <span class="save" id="save-status" role="status" aria-live="polite"></span>
@@ -38,6 +40,10 @@
 
 <main class="wrap" id="main">
   <div id="feed" class="feed"></div>
+  <div id="mapview" class="mapview" hidden>
+    <div id="map" class="mapbox" role="application" aria-label="Map of places"></div>
+    <div id="map-panel" class="map-panel"></div>
+  </div>
 </main>
 
 <footer class="wrap foot" id="foot"></footer>
@@ -76,4 +82,6 @@
 <script src="store.js"></script>
 <script src="photos.js"></script>
 <script src="backup.js"></script>
+<script src="mapdata.js"></script>
+<script src="map.js"></script>
 <script src="app.js"></script>

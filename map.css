@@ -1,0 +1,151 @@
+/* Pan/zoom map (map.js). Colours come only from the app's theme variables. */
+.tjmap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--sea);
+}
+
+.tjmap-svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--sea);
+  touch-action: none;
+  cursor: grab;
+}
+.tjmap-svg.tjmap-dragging { cursor: grabbing; }
+.tjmap-placing .tjmap-svg,
+.tjmap-placing .tjmap-pin { cursor: crosshair; }
+
+.tjmap-land {
+  fill: var(--land);
+  stroke: var(--coast);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Basemap labels */
+.tjmap-labels { pointer-events: none; }
+.tjmap-label-text {
+  paint-order: stroke;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.tjmap-label-town .tjmap-label-text,
+.tjmap-measure.tjmap-label-town {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--ink);
+  stroke: var(--land);
+}
+.tjmap-label-town .tjmap-label-dot { fill: var(--ink); }
+.tjmap-label-landmark .tjmap-label-text,
+.tjmap-measure.tjmap-label-landmark {
+  font-family: var(--sans);
+  font-size: 10px;
+  fill: var(--muted);
+  stroke: var(--land);
+}
+.tjmap-label-landmark .tjmap-label-dot { fill: var(--muted); }
+.tjmap-label-water .tjmap-label-text,
+.tjmap-measure.tjmap-label-water {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  fill: var(--muted);
+  stroke: var(--sea);
+}
+
+/* Pins */
+.tjmap-pin { cursor: pointer; outline: none; }
+.tjmap-pin-hit { fill: none; pointer-events: all; }
+.tjmap-pin-dot {
+  fill: var(--accent);
+  stroke: var(--paper);
+  stroke-width: 2;
+}
+.tjmap-pin.is-selected .tjmap-pin-dot { fill: var(--rose); stroke-width: 2.5; }
+.tjmap-pin:focus-visible .tjmap-pin-dot { stroke: var(--ink); stroke-width: 3; }
+.tjmap-pin-num {
+  fill: var(--paper);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+.tjmap-chip { pointer-events: none; }
+.tjmap-chip-bg {
+  fill: var(--paper);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.tjmap-chip-text,
+.tjmap-measure.tjmap-chip-text {
+  fill: var(--ink);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  dominant-baseline: central;
+}
+.tjmap-pin.is-selected .tjmap-chip-text { font-weight: 600; }
+.tjmap-pin.is-selected .tjmap-chip-bg { stroke: var(--rose); }
+
+.tjmap-measure { visibility: hidden; pointer-events: none; }
+
+/* Controls */
+.tjmap-controls {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tjmap-btn {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.tjmap-btn.tjmap-fit { font-size: 13px; font-weight: 600; }
+.tjmap-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.tjmap-attr {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  max-width: calc(100% - 72px);
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 10px;
+  line-height: 1.3;
+  pointer-events: none;
+}
+.tjmap-attr[hidden] { display: none; }

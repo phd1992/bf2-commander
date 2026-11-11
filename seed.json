@@ -35,7 +35,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.9785,
+   "lng": 18.459,
+   "posApprox": true
   },
   {
    "id": "kirstenbosch",
@@ -48,7 +51,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.9875,
+   "lng": 18.4327,
+   "posApprox": true
   },
   {
    "id": "foxcroft",
@@ -61,7 +67,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -34.0245,
+   "lng": 18.429,
+   "posApprox": true
   },
   {
    "id": "chapmans-peak-drive",
@@ -74,7 +83,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -34.088,
+   "lng": 18.359,
+   "posApprox": true
   },
   {
    "id": "cape-point",
@@ -87,7 +99,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -34.3568,
+   "lng": 18.497,
+   "posApprox": true
   },
   {
    "id": "boulders-beach",
@@ -100,7 +115,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -34.1975,
+   "lng": 18.451,
+   "posApprox": true
   },
   {
    "id": "lucky-fish",
@@ -113,7 +131,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -34.1297,
+   "lng": 18.449,
+   "posApprox": true
   },
   {
    "id": "lions-head",
@@ -126,7 +147,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.935,
+   "lng": 18.389,
+   "posApprox": true
   },
   {
    "id": "va-waterfront",
@@ -139,7 +163,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.9036,
+   "lng": 18.421,
+   "posApprox": true
   },
   {
    "id": "thompson",
@@ -152,7 +179,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": null,
+   "lng": null,
+   "posApprox": false
   },
   {
    "id": "gin-bar",
@@ -165,7 +195,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.9226,
+   "lng": 18.4183,
+   "posApprox": true
   },
   {
    "id": "hertz",
@@ -178,7 +211,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": null,
+   "lng": null,
+   "posApprox": false
   },
   {
    "id": "la-petite-colombe",
@@ -191,7 +227,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.905,
+   "lng": 19.101,
+   "posApprox": true
   },
   {
    "id": "leeu-estates-gardens",
@@ -204,7 +243,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.9066,
+   "lng": 19.0995,
+   "posApprox": true
   },
   {
    "id": "babylonstoren",
@@ -217,7 +259,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.824,
+   "lng": 18.927,
+   "posApprox": true
   },
   {
    "id": "klein-champagne",
@@ -230,7 +275,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": null,
+   "lng": null,
+   "posApprox": false
   },
   {
    "id": "tokara",
@@ -243,7 +291,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.917,
+   "lng": 18.92,
+   "posApprox": true
   },
   {
    "id": "boschendal",
@@ -256,7 +307,10 @@
    "recommendation": "",
    "photos": [],
    "cover": null,
-   "updatedAt": 0
+   "updatedAt": 0,
+   "lat": -33.8745,
+   "lng": 18.974,
+   "posApprox": true
   }
  ]
 }

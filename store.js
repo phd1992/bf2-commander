@@ -109,6 +109,10 @@
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
+  function validPos(d) {
+    return typeof d.lat === "number" && typeof d.lng === "number" && isFinite(d.lat) && isFinite(d.lng) && Math.abs(d.lat) <= 90 && Math.abs(d.lng) <= 180;
+  }
+
   function normalisePlace(id, d) {
     d = d || {};
     return {
@@ -124,6 +128,9 @@
         return { id: p.id, thumb: typeof p.thumb === "string" ? p.thumb : p.id, w: +p.w || 0, h: +p.h || 0, caption: typeof p.caption === "string" ? p.caption : "" };
       }) : [],
       cover: typeof d.cover === "string" ? d.cover : null,
+      lat: validPos(d) ? +d.lat : null,
+      lng: validPos(d) ? +d.lng : null,
+      posApprox: validPos(d) && d.posApprox === true,
       updatedAt: +d.updatedAt || 0,
     };
   }

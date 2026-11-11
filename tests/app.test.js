@@ -195,11 +195,41 @@ function check(name, ok, extra) { console.log((ok ? 'PASS  ' : 'FAIL  ') + name 
   const blobCount = await page.evaluate(() => new Promise(r => { const q = indexedDB.open('travel-journal'); q.onsuccess = () => { const c = q.result.transaction('blobs').objectStore('blobs').count(); c.onsuccess = () => r(c.result); }; }));
   check('no orphaned photo files left behind', blobCount === 4, 'blobs=' + blobCount);
 
+  // map
+  await page.click('#sheet-close');
+  await page.click('#view-map');
+  await page.waitForSelector('.tjmap svg');
+  const pinSel = '#map [role="button"][aria-label]';
+  await page.waitForFunction(s => document.querySelectorAll(s).length >= 15, pinSel);
+  check('map: 15 seeded pins, 4 unplaced', await page.locator(pinSel).count() === 15 && await page.locator('.unplaced-row').count() === 4, await page.locator(pinSel).count() + ' pins, ' + await page.locator('.unplaced-row').count() + ' unplaced');
+  await page.waitForTimeout(400);
+  if (shot) await page.screenshot({ path: shot + '/13-map.png' });
+  await page.locator('.unplaced-row', { hasText: 'Hertz' }).locator('[data-act="place-pin"]').click();
+  const mb = await page.locator('#map').boundingBox();
+  await page.mouse.click(mb.x + mb.width / 2, mb.y + mb.height / 2);
+  await page.waitForFunction(s => document.querySelectorAll(s).length === 16, pinSel);
+  check('map: tap places a pin and selects it', (await page.locator('.map-sel h2').textContent()) === 'Hertz' && await page.locator('.unplaced-row').count() === 3);
+  if (shot) await page.screenshot({ path: shot + '/14-map-selected.png' });
+  await page.click('[data-act="map-open"]');
+  await page.waitForSelector('#sheet[open]');
+  await page.click('#sheet-edit');
+  check('map: position shown in edit form', /^-?\d+\.\d{5}, -?\d+\.\d{5}$/.test(await page.inputValue('#f-pos')), await page.inputValue('#f-pos'));
+  await page.fill('#f-pos', 'https://www.google.com/maps/place/X/@-33.9715,18.6021,17z');
+  await page.click('#place-form button[type=submit]');
+  await page.click('#sheet-close');
+  await page.waitForFunction(() => /Saved/.test(document.getElementById('save-status').textContent));
+  await page.reload();
+  await page.waitForSelector('.tjmap svg');
+  await page.waitForFunction(s => document.querySelectorAll(s).length === 16, pinSel);
+  const hz = await page.evaluate(() => new Promise(r => { const q = indexedDB.open('travel-journal'); q.onsuccess = () => { const c = q.result.transaction('docs').objectStore('docs').get('place:hertz'); c.onsuccess = () => r(c.result); }; }));
+  check('map: pasted Maps link parsed and kept after refresh', hz.lat === -33.9715 && hz.lng === 18.6021 && hz.posApprox === false, JSON.stringify([hz.lat, hz.lng]));
+  await page.click('#view-cards');
+
   // desktop + dark screenshot
   if (shot) {
     const d = await browser.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: 'dark', deviceScaleFactor: 1 });
     const p2 = await d.newPage(); await p2.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
-    await p2.goto(url); await p2.waitForSelector('.card'); await p2.screenshot({ path: shot + '/12-desktop-dark.png' });
+    await p2.goto(url); await p2.waitForSelector('.card'); await p2.click('#view-map'); await p2.waitForSelector('.tjmap svg'); await p2.waitForTimeout(500); await p2.screenshot({ path: shot + '/12-desktop-dark.png' });
     check('desktop: no horizontal scroll', await p2.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
   }
   check('no page errors', errors.length === 0, errors.join(' | '));

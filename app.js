@@ -18,10 +18,11 @@
     view: "cards", filter: "all", reorder: false,
     openId: null, isNew: false, editing: false, managing: false, confirmRemove: null,
     dragging: false, lb: null, feedTarget: null, focusField: null,
+    mapSel: null, placing: null,
   };
   try {
     var saved = JSON.parse(localStorage.getItem("tj-ui") || "{}");
-    if (saved.view === "list" || saved.view === "cards") ui.view = saved.view;
+    if (saved.view === "list" || saved.view === "cards" || saved.view === "map") ui.view = saved.view;
     if (saved.filter && (saved.filter === "all" || CATS.some(function (c) { return c[0] === saved.filter; }))) ui.filter = saved.filter;
   } catch (e) {}
   function remember() {
@@ -76,6 +77,25 @@
     t.textContent = msg; t.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.hidden = true; }, 3200);
+  }
+
+  function hasPos(p) { return typeof p.lat === "number" && typeof p.lng === "number"; }
+  function fmtPos(p) { return hasPos(p) ? p.lat.toFixed(5) + ", " + p.lng.toFixed(5) : ""; }
+  // accepts "-33.98, 18.43" or a pasted Google / Apple Maps link
+  function parsePos(text) {
+    var t = String(text || "").trim(), m;
+    if (!t) return null;
+    m = /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/.exec(t) || /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(t) ||
+      /[?&](?:q|ll|query|center|destination)=(-?\d+(?:\.\d+)?)(?:,|%2C)\s*(-?\d+(?:\.\d+)?)/i.exec(t) ||
+      /^(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)$/.exec(t);
+    if (!m) return false;
+    var lat = parseFloat(m[1].replace(",", ".")), lng = parseFloat(m[2].replace(",", "."));
+    if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return false;
+    return { lat: +lat.toFixed(5), lng: +lng.toFixed(5) };
+  }
+  function mapsLink(p) {
+    var q = hasPos(p) && !p.posApprox ? p.lat + "," + p.lng : [p.name, p.location, S.journal.title].filter(Boolean).join(", ");
+    return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
   }
 
   /* ---------- uploads ---------- */
@@ -258,6 +278,11 @@
     setHTML($("chips"), chipsHTML());
     $("view-cards").setAttribute("aria-pressed", ui.view === "cards");
     $("view-list").setAttribute("aria-pressed", ui.view === "list");
+    $("view-map").setAttribute("aria-pressed", ui.view === "map");
+    var showMap = ui.view === "map" && !ui.reorder && S.ready && all.length > 0;
+    $("mapview").hidden = !showMap;
+    $("feed").hidden = showMap;
+    if (showMap) renderMap(all);
     $("btn-reorder").textContent = ui.reorder ? "Done" : "Reorder";
     setHTML($("feed"), feedHTML());
     var st = saveStatus();
@@ -339,7 +364,67 @@
       (sub.length ? '<p class="subline">' + sub.join("") + "</p>" : "") +
       (p.review ? '<p class="review"' + (canEdit() ? ' data-act="edit-review" data-edit-review title="Tap to edit"' : "") + ">" + esc(p.review) + "</p>"
         : (canEdit() ? '<p class="review is-empty" data-act="edit-review" data-edit-review>No review yet. Tap to write one.</p>' : "")) +
+      '<p class="place-links">' + (hasPos(p) ? '<button type="button" class="btn btn-small btn-quiet" data-act="show-on-map">Show on map</button>' : "") +
+      '<a class="btn btn-small btn-quiet" target="_blank" rel="noopener" href="' + esc(mapsLink(p)) + '">Open in Google Maps</a></p>' +
       (p.notes ? '<div class="notes"><h3>Dictated notes</h3><p>' + esc(p.notes) + "</p></div>" : "");
+  }
+
+  /* ---------- map view ---------- */
+  var map = null;
+  function renderMap(all) {
+    if (!map && TJ.createMap) {
+      map = TJ.createMap($("map"), {
+        onSelect: function (id) { if (ui.placing) return; ui.mapSel = id; render(); },
+        onPlace: function (lat, lng) {
+          var place = S.places[ui.placing];
+          ui.placing = null; map.setPlacing(false);
+          if (!place) { render(); return; }
+          var p = clone(place); p.lat = lat; p.lng = lng; p.posApprox = false;
+          store.savePlace(p); ui.mapSel = p.id; render(); toast("Pin placed");
+        },
+      });
+    }
+    var shown = ui.filter === "all" ? all : all.filter(function (p) { return p.category === ui.filter; });
+    var pins = [], unplaced = [];
+    all.forEach(function (p, i) {
+      if (shown.indexOf(p) < 0) return;
+      if (hasPos(p)) pins.push({ id: p.id, name: p.name || "Untitled place", lat: p.lat, lng: p.lng, number: i + 1 });
+      else unplaced.push(p);
+    });
+    if (ui.mapSel && !pins.some(function (x) { return x.id === ui.mapSel; })) ui.mapSel = null;
+    if (ui.placing && !S.places[ui.placing]) { ui.placing = null; if (map) map.setPlacing(false); }
+    if (map) { map.resize(); map.setData({ pins: pins, selectedId: ui.mapSel }); }
+
+    var html = "";
+    if (!map) html += '<p class="hint">The map couldn\'t be loaded.</p>';
+    if (ui.placing) {
+      html += '<div class="map-note"><span>Tap the map where <b>' + esc(S.places[ui.placing].name) + '</b> is. Zoom in first for a precise spot.</span><button type="button" class="btn btn-small btn-quiet" data-act="place-cancel">Cancel</button></div>';
+    } else if (ui.mapSel) {
+      var p = S.places[ui.mapSel];
+      html += '<div class="map-sel" data-map-id="' + esc(p.id) + '"><p class="meta"><span>' + esc(catLabel(p.category)) + "</span>" + (p.location ? '<span class="loc">' + esc(p.location) + "</span>" : "") + "</p>" +
+        "<h2>" + esc(p.name || "Untitled place") + "</h2>" + (p.review ? '<p class="card-review">' + esc(p.review) + "</p>" : "") +
+        (p.posApprox ? '<p class="hint">This pin is an approximate position. Move it if it is off.</p>' : "") +
+        '<p class="place-links"><button type="button" class="btn btn-small btn-primary" data-act="map-open">Open place</button>' +
+        (canEdit() ? '<button type="button" class="btn btn-small btn-quiet" data-act="place-pin">Move pin</button><button type="button" class="btn btn-small btn-quiet" data-act="unpin">Remove pin</button>' : "") + "</p></div>";
+    } else if (pins.length) {
+      html += '<p class="hint">Tap a numbered pin to read its review. Numbers follow the order of your journal.</p>';
+    } else {
+      html += '<p class="hint">No places are on the map yet.</p>';
+    }
+    if (unplaced.length) {
+      html += '<div class="unplaced"><h3>Not on the map yet</h3>' + unplaced.map(function (p) {
+        return '<div class="unplaced-row" data-map-id="' + esc(p.id) + '"><b>' + esc(p.name || "Untitled place") + "</b>" +
+          (canEdit() ? '<button type="button" class="btn btn-small btn-quiet" data-act="place-pin">Place on map</button>' : "") + "</div>";
+      }).join("") + "</div>";
+    }
+    setHTML($("map-panel"), html);
+  }
+  function showOnMap(id) {
+    forceCloseSheet();
+    ui.view = "map"; ui.reorder = false; ui.filter = "all"; ui.mapSel = id; remember();
+    renderNow();
+    if (map) map.focus(id);
+    $("mapview").scrollIntoView({ block: "start" });
   }
 
   function formHTML(p, isNew) {
@@ -355,12 +440,13 @@
       '<div class="field"><label for="f-rec">Recommendation (optional)</label><select id="f-rec"><option value="">Not set</option>' + RECS.map(function (r) {
         return "<option" + (p.recommendation === r ? " selected" : "") + ">" + esc(r) + "</option>";
       }).join("") + "</select></div></div>" +
+      '<div class="field"><label for="f-pos">Map position (optional)</label><input id="f-pos" type="text" inputmode="text" autocomplete="off" placeholder="-33.9875, 18.4327" value="' + esc(fmtPos(p)) + '"><small>Paste coordinates or a Google Maps link. You can also use Place on map in the Map view.</small><span class="err" id="f-pos-err" hidden>That doesn\'t look like coordinates. Use latitude, longitude, for example -33.9875, 18.4327.</span></div>' +
       '<div class="field"><label for="f-notes">Dictated notes</label><textarea id="f-notes" rows="5" maxlength="20000" placeholder="Paste raw notes here">' + esc(p.notes) + "</textarea><small>Kept alongside the review exactly as pasted. Not included in the trip recap.</small></div>" +
       '<div class="form-actions"><button type="submit" class="btn btn-primary">' + (isNew ? "Add place" : "Save") + '</button><button type="button" class="btn btn-quiet" data-act="edit-cancel">Cancel</button><span class="spacer"></span>' +
       (isNew ? "" : '<button type="button" class="btn btn-danger" data-act="place-delete">Delete place</button>') + "</div></form>";
   }
 
-  var blankPlace = { name: "", location: "", category: "restaurant", review: "", notes: "", visitDate: "", recommendation: "", photos: [], cover: null };
+  var blankPlace = { name: "", location: "", category: "restaurant", review: "", notes: "", visitDate: "", recommendation: "", photos: [], cover: null, lat: null, lng: null, posApprox: false };
 
   function renderSheet() {
     var sheet = $("sheet");
@@ -413,12 +499,20 @@
     return {
       name: $("f-name").value.trim(), location: $("f-location").value.trim(), category: $("f-category").value,
       review: $("f-review").value.trim(), notes: $("f-notes").value, visitDate: $("f-date").value, recommendation: $("f-rec").value,
+      pos: $("f-pos").value.trim(),
     };
   }
   function formDirty() { return ui.editing && $("place-form") && JSON.stringify(readForm()) !== ui.formInitial; }
   function saveForm() {
     var v = readForm();
     if (!v.name) { $("f-name-err").hidden = false; $("f-name").focus(); return; }
+    var pos = parsePos(v.pos), posText = v.pos;
+    if (pos === false) { $("f-pos-err").hidden = false; $("f-pos").focus(); return; }
+    delete v.pos;
+    var before = ui.isNew ? blankPlace : S.places[ui.openId];
+    if (before && posText !== fmtPos(before)) { // only touch the pin when the field was changed
+      v.lat = pos ? pos.lat : null; v.lng = pos ? pos.lng : null; v.posApprox = false;
+    }
     var p;
     if (ui.isNew) {
       p = Object.assign(clone(blankPlace), v, { id: newPlaceId(v.name) });
@@ -749,6 +843,7 @@
     var row = t.closest("[data-sort]"), sortId = row && row.getAttribute("data-sort");
     var phEl = t.closest("[data-ph]"), ph = phEl && phEl.getAttribute("data-ph");
     var qEl = t.closest("[data-q]"), q = qEl && qEl.getAttribute("data-q");
+    var mEl = t.closest("[data-map-id]"), mapId = mEl && mEl.getAttribute("data-map-id");
 
     switch (name) {
       case "pick-feed": ui.feedTarget = id; return; // the label opens the picker itself
@@ -771,6 +866,11 @@
       case "ph-remove-yes": removePhoto(ph); return;
       case "q-retry": queue.retry(q); return;
       case "q-dismiss": queue.dismiss(q); render(); return;
+      case "show-on-map": showOnMap(ui.openId); return;
+      case "map-open": openSheet(mapId); return;
+      case "place-pin": ui.placing = mapId; ui.mapSel = null; if (map) map.setPlacing(true); render(); $("mapview").scrollIntoView({ block: "start" }); return;
+      case "place-cancel": ui.placing = null; if (map) map.setPlacing(false); render(); return;
+      case "unpin": if (S.places[mapId]) { var up = clone(S.places[mapId]); up.lat = null; up.lng = null; up.posApprox = false; store.savePlace(up); ui.mapSel = null; render(); } return;
     }
     if (id && !t.closest("dialog")) {
       e.preventDefault();
@@ -785,6 +885,7 @@
   $("btn-reorder").addEventListener("click", function () { ui.reorder = !ui.reorder; render(); if (ui.reorder) window.scrollTo({ top: $("toolbar").offsetTop }); });
   $("view-cards").addEventListener("click", function () { ui.view = "cards"; ui.reorder = false; remember(); render(); });
   $("view-list").addEventListener("click", function () { ui.view = "list"; ui.reorder = false; remember(); render(); });
+  $("view-map").addEventListener("click", function () { ui.view = "map"; ui.reorder = false; remember(); render(); });
   $("sheet-close").addEventListener("click", requestCloseSheet);
   $("sheet-edit").addEventListener("click", function () { startEdit("f-review"); });
   $("sheet").addEventListener("cancel", function (e) { e.preventDefault(); requestCloseSheet(); });
