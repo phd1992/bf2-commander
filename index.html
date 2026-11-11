@@ -1,0 +1,79 @@
+<title>South Africa Journal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<link rel="stylesheet" href="styles.css">
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Travel journal</p>
+    <h1 id="trip-title">&nbsp;</h1>
+    <p class="trip-sub" id="trip-sub">&nbsp;</p>
+    <p class="trip-stats" id="trip-stats"></p>
+    <div class="masthead-actions">
+      <button type="button" class="btn" id="btn-recap">Copy trip recap</button>
+      <button type="button" class="btn btn-quiet" id="btn-backup">Backup</button>
+      <button type="button" class="btn btn-quiet" id="btn-trip" data-edit>Edit trip</button>
+    </div>
+  </div>
+</header>
+
+<div class="banner" id="banner" hidden><div class="wrap" id="banner-text"></div></div>
+
+<nav class="toolbar" id="toolbar" aria-label="Journal controls">
+  <div class="wrap toolbar-row">
+    <div class="seg" role="group" aria-label="View">
+      <button type="button" id="view-cards" aria-pressed="true">Cards</button>
+      <button type="button" id="view-list" aria-pressed="false">List</button>
+    </div>
+    <div class="toolbar-right">
+      <span class="save" id="save-status" role="status" aria-live="polite"></span>
+      <button type="button" class="btn btn-quiet btn-small" id="btn-reorder" data-edit>Reorder</button>
+      <button type="button" class="btn btn-primary btn-small" id="btn-add" data-edit>Add place</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
+  </div>
+</nav>
+
+<main class="wrap" id="main">
+  <div id="feed" class="feed"></div>
+</main>
+
+<footer class="wrap foot" id="foot"></footer>
+
+<!-- photo pickers for the feed (the place sheet has its own pair, since a modal makes outside inputs inert) -->
+<input class="vh" type="file" id="feed-pick" accept="image/*,.heic,.heif" multiple tabindex="-1" aria-hidden="true">
+
+<dialog class="sheet" id="sheet" aria-labelledby="sheet-name">
+  <div class="sheet-bar">
+    <button type="button" class="btn btn-quiet btn-small" id="sheet-close">Close</button>
+    <span class="save" id="sheet-save" aria-hidden="true"></span>
+    <button type="button" class="btn btn-small" id="sheet-edit" data-edit>Edit</button>
+  </div>
+  <div class="sheet-scroll" id="sheet-scroll">
+    <section id="sheet-photos" class="sheet-photos"></section>
+    <section id="sheet-body" class="sheet-body"></section>
+  </div>
+  <input class="vh" type="file" id="sheet-pick" accept="image/*,.heic,.heif" multiple tabindex="-1">
+  <input class="vh" type="file" id="sheet-camera" accept="image/*" capture="environment" tabindex="-1">
+</dialog>
+
+<dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
+  <button type="button" class="lb-btn lb-close" id="lb-close" aria-label="Close photo">Close</button>
+  <button type="button" class="lb-btn lb-prev" id="lb-prev" aria-label="Previous photo">&#8592;</button>
+  <button type="button" class="lb-btn lb-next" id="lb-next" aria-label="Next photo">&#8594;</button>
+  <figure>
+    <img id="lb-img" alt="">
+    <figcaption id="lb-cap"></figcaption>
+  </figure>
+</dialog>
+
+<dialog class="modal" id="modal"><div id="modal-body"></div></dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="store.js"></script>
+<script src="photos.js"></script>
+<script src="backup.js"></script>
+<script src="app.js"></script>
